@@ -417,7 +417,16 @@ static RimeLeversApi *get_levers() {
 }
 
 - (BOOL)replaceInputKeys:(NSString *)keys withStartPos:(int)pos AndCount:(int)length AndSession:(RimeSessionId)session {
-  return RimeReplaceInput(session, pos, length, [keys UTF8String]);
+  // librime 1.8.5 未匯出 RimeReplaceInput（標頭比二進位新）。
+  // 用 1.8.5 現存的 RimeSimulateKeySequence 做等價行為：
+  // 游標在編碼末尾，先退格 length 字元再輸入 keys。
+  // 呼叫端（T9 九鍵選音）的 pos 恆在末尾附近，近似合理；M0 不依賴此路徑。
+  NSMutableString *sequence = [NSMutableString string];
+  for (int i = 0; i < length; i++) {
+    [sequence appendString:@"{BackSpace}"];
+  }
+  [sequence appendString:keys];
+  return RimeSimulateKeySequence(session, [sequence UTF8String]);
 }
 
 - (NSArray<IRimeCandidate *> *)getCandidateList:(RimeSessionId)session {

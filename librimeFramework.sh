@@ -13,20 +13,12 @@ trap 'rm -rf "$TMP"' EXIT
 mkdir -p "$OUTPUT"
 rm -rf "$OUTPUT"/*.xcframework
 
-echo "==> 下載 thomfang Frameworks.tgz (librime 1.16.1)"
-curl -sL -o "$TMP/thom.tgz" https://github.com/thomfang/LibrimeKit-iOS/releases/download/v0.2.2/Frameworks.tgz
-tar -xzf "$TMP/thom.tgz" -C "$TMP"
-for f in "$TMP"/*.xcframework; do
-  case "$(basename "$f")" in
-    boost_thread.xcframework) continue ;;  # Hamster 不需要
-  esac
-  cp -R "$f" "$OUTPUT/"
-done
-
-echo "==> 下載 amorphobia Frameworks.tgz（補 boost_atomic）"
+# 注意：thomfang 版 librime 未匯出 C API（僅 2 個 _Rime* 符號），RimeKitObjC 需要 75 個，
+# 必須用 amorphobia 版（librime 1.8.5，完整 C API）。
+echo "==> 下載 amorphobia Frameworks.tgz (librime 1.8.5)"
 curl -sL -o "$TMP/am.tgz" https://github.com/amorphobia/LibrimeKit/releases/download/v0.1.0/Frameworks.tgz
 tar -xzf "$TMP/am.tgz" -C "$TMP"
-cp -R "$TMP/Frameworks/boost_atomic.xcframework" "$OUTPUT/"
+cp -R "$TMP/Frameworks/"*.xcframework "$OUTPUT/"
 
 echo "==> 完成：$(ls "$OUTPUT" | wc -l | tr -d ' ') 個 xcframework"
 ls "$OUTPUT"
