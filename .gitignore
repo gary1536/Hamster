@@ -27,4 +27,4 @@ package/
 
 # VueJS
 /Packages/HamsterFileServer/Front/node_modules
-/Packages/HamsterFileServer/Front/dist/*
+/Packages/HamsterFileServer/Front/dist/*Frameworks/
