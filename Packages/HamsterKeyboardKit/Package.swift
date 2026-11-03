@@ -51,6 +51,11 @@ let package = Package(
     .binaryTarget(
       name: "libyaml-cpp",
       path: "../../Frameworks/libyaml-cpp.xcframework"),
+    // 語音鍵 patch：最小 OpenCC C API 橋接（符號來自 libopencc.xcframework）
+    .target(
+      name: "OpenCCBridge",
+      dependencies: ["libopencc"],
+      path: "OpenCCBridge"),
     .target(
       name: "HamsterKeyboardKit",
       dependencies: [
@@ -58,6 +63,7 @@ let package = Package(
         "HamsterUIKit",
         // "ZippyJSON",
         "RimeKit",
+        "OpenCCBridge",
       ],
       path: "Sources",
       resources: [.process("Resources")]),

@@ -92,6 +92,7 @@ popd > /dev/null
 mkdir -p $CI_PRIMARY_REPOSITORY_PATH/Resources/SharedSupport
 (
   cp $CI_PRIMARY_REPOSITORY_PATH/Resources/SharedSupport/hamster.yaml $DST_PATH
+  cp $CI_PRIMARY_REPOSITORY_PATH/Resources/InputSchemas/boshiamy/boshiamy.*.yaml $DST_PATH
   cd $DST_PATH/
   zip -r SharedSupport.zip *
 ) && cp $DST_PATH/SharedSupport.zip $CI_PRIMARY_REPOSITORY_PATH/Resources/SharedSupport/
@@ -102,6 +103,10 @@ input_scheme_name=rime-ice
 rm -rf $OUTPUT/.$input_scheme_name && \
   git clone --depth 1 https://github.com/iDvel/$input_scheme_name $OUTPUT/.$input_scheme_name && (
     cd $OUTPUT/.$input_scheme_name
+    # 內建嘸蝦米方案（Gary fork 加料）
+    cp $CI_PRIMARY_REPOSITORY_PATH/Resources/InputSchemas/boshiamy/boshiamy.dict.yaml .
+    cp $CI_PRIMARY_REPOSITORY_PATH/Resources/InputSchemas/boshiamy/boshiamy.schema.yaml .
+    sed -i '' 's/^  - schema: rime_ice/  - schema: boshiamy              # 嘸蝦米\n  - schema: rime_ice/' default.yaml
     # 提前编译
     # export DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH:$WORK/.deps/dist/lib
     # $WORK/.deps/dist/bin/rime_deployer --build .

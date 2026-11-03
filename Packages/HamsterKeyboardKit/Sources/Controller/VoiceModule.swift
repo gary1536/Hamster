@@ -10,6 +10,7 @@
 
 import AVFoundation
 import Foundation
+import OpenCCBridge
 import Speech
 
 public final class VoiceModule: NSObject {
@@ -33,6 +34,36 @@ public final class VoiceModule: NSObject {
   private lazy var recognizer = SFSpeechRecognizer(locale: Locale(identifier: "zh-TW"))
   private var request: SFSpeechAudioBufferRecognitionRequest?
   private var task: SFSpeechRecognitionTask?
+
+  // MARK: - 簡轉繁（OpenCC s2t）
+
+  /// Apple 雲端 zh-TW 辨識仍常回簡體，上屏前用 OpenCC 強制轉繁。
+  /// 資料檔隨 SharedSupport.zip 部署在 App Group：.../opencc/s2t.json
+  private lazy var openccHandle: opencc_t? = {
+    let configURL = FileManager.appGroupSharedSupportDirectoryURL
+      .appendingPathComponent("opencc", isDirectory: true)
+      .appendingPathComponent("s2t.json")
+    guard FileManager.default.fileExists(atPath: configURL.path) else {
+      return nil
+    }
+    let handle = configURL.path.withCString { opencc_open($0) }
+    if handle == UnsafeMutableRawPointer(bitPattern: -1) {
+      return nil
+    }
+    return handle
+  }()
+
+  func toTraditional(_ text: String) -> String {
+    guard let handle = openccHandle else { return text }
+    let converted: String = text.withCString { cString in
+      guard let out = opencc_convert_utf8(handle, cString, strlen(cString)) else {
+        return text
+      }
+      defer { opencc_convert_utf8_free(out) }
+      return String(cString: out)
+    }
+    return converted
+  }
 
   // MARK: - Public
 
@@ -125,7 +156,7 @@ public final class VoiceModule: NSObject {
         let isFinal = result.isFinal
         DispatchQueue.main.async {
           if isFinal {
-            self.onFinalResult?(text)
+            self.onFinalResult?(self.toTraditional(text))
             self.stop()
           } else {
             self.onPartialResult?(text)
