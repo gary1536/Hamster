@@ -58,6 +58,8 @@
 		C0A602B32A185D88000DC924 /* HamsterKeyboardInputViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C000CA9D296EA72600EC5323 /* HamsterKeyboardInputViewController.swift */; };
 		C0C7EAEC29E5A236008D4EE1 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C0C7EAEF29E5A236008D4EE1 /* InfoPlist.strings */; };
 		C0D672B429F1E0E7002D0439 /* SharedSupport.zip in Copy Rime SharedSupport */ = {isa = PBXBuildFile; fileRef = C0D672B329F1E066002D0439 /* SharedSupport.zip */; };
+		C0FACE102B069D6B00E92F89 /* SharedSupport.zip in Resources */ = {isa = PBXBuildFile; fileRef = C0D672B329F1E066002D0439 /* SharedSupport.zip */; };
+		C0FACE112B069D6B00E92F89 /* rime-ice.zip in Resources */ = {isa = PBXBuildFile; fileRef = C0D856CA2B026FDA003DB275 /* rime-ice.zip */; };
 		C0D856CC2B026FF6003DB275 /* rime-ice.zip in Copy Rime SharedSupport */ = {isa = PBXBuildFile; fileRef = C0D856CA2B026FDA003DB275 /* rime-ice.zip */; };
 		C0DA3F422AFB5AE9003E74DA /* RimeDeployBackgroundIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DA3F412AFB5AE9003E74DA /* RimeDeployBackgroundIntent.swift */; };
 /* End PBXBuildFile section */
@@ -499,6 +501,8 @@
 			files = (
 				C09F6AF72A07FB3900F2EF18 /* Assets.xcassets in Resources */,
 				C03EC3A62B06670F00DB741E /* InfoPlist.strings in Resources */,
+				C0FACE102B069D6B00E92F89 /* SharedSupport.zip in Resources */,
+				C0FACE112B069D6B00E92F89 /* rime-ice.zip in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

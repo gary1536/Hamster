@@ -408,6 +408,56 @@ public extension FileManager {
     )
   }
 
+  /// 仓鼠语音键 patch：确保 AppGroup 词库目录存在。
+  /// 若 AppGroup 的 SharedSupport 缺失（重置中途被杀/首次未部署），
+  /// 从传入的 bundle zip 自助解压；回传是否做了 bootstrap（需要维护模式重建）。
+  static func bootstrapAppGroupRimeDirectoriesIfNeeded(supportZip: URL?, userDataZip: URL?) -> Bool {
+    let fm = FileManager.default
+    let agShared = appGroupSharedSupportDirectoryURL
+    let agUser = appGroupUserDataDirectoryURL
+    let marker = agShared.appendingPathComponent("default.yaml")
+    if fm.fileExists(atPath: marker.path) { return false }
+
+    var did = false
+    if let z = supportZip, fm.fileExists(atPath: z.path) {
+      do {
+        try fm.createDirectory(at: agShared, withIntermediateDirectories: true)
+        try fm.unzipItem(at: z, to: agShared)
+        did = true
+      } catch {
+        Logger.statistics.error("bootstrap SharedSupport error: \(error.localizedDescription)")
+      }
+    }
+    let userMarker = agUser.appendingPathComponent("default.yaml")
+    if !fm.fileExists(atPath: userMarker.path), let z = userDataZip, fm.fileExists(atPath: z.path) {
+      do {
+        try fm.createDirectory(at: agUser, withIntermediateDirectories: true)
+        try fm.unzipItem(at: z, to: agUser)
+        did = true
+      } catch {
+        Logger.statistics.error("bootstrap UserData error: \(error.localizedDescription)")
+      }
+    }
+    return did
+  }
+
+  /// 主 App 启动时修补：AppGroup 缺词库但沙盒有（重置被中断）→ 补同步
+  static func repairAppGroupFromSandboxIfNeeded() {
+    let fm = FileManager.default
+    let agMarker = appGroupSharedSupportDirectoryURL.appendingPathComponent("default.yaml")
+    if fm.fileExists(atPath: agMarker.path) { return }
+    let sbMarker = sandboxSharedSupportDirectory.appendingPathComponent("default.yaml")
+    guard fm.fileExists(atPath: sbMarker.path) else { return }
+    do {
+      try syncSandboxSharedSupportDirectoryToAppGroup(override: true)
+      try syncSandboxUserDataDirectoryToAppGroup(override: true)
+      UserDefaults.hamster.overrideRimeDirectory = true
+      Logger.statistics.info("AppGroup 词库缺失，已从沙盒补同步")
+    } catch {
+      Logger.statistics.error("repairAppGroup error: \(error.localizedDescription)")
+    }
+  }
+
   // 初始化沙盒目录下 UserData 目录资源
   static func initSandboxUserDataDirectory(override: Bool = false, unzip: Bool = false) throws {
     try FileManager.createDirectory(

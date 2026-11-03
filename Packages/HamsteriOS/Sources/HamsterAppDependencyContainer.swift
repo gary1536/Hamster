@@ -139,6 +139,9 @@ open class HamsterAppDependencyContainer {
 
     // 非首次启动从 UserDefault 文件中加载
     do {
+      // 自愈（Gary fork）：AppGroup 詞庫缺失（上次部署/重置被中途中斷）→ 從沙盒補同步
+      FileManager.repairAppGroupFromSandboxIfNeeded()
+
       self.configuration = try HamsterConfigurationRepositories.shared.loadFromUserDefaults()
 
       // PATCH
