@@ -160,6 +160,8 @@ public extension KeyboardAction {
         $0?.selectNextKeyboard()
       }
     case .primary: return { $0?.insertRimeKeyCode(XK_Return) }
+    // 語音鍵 patch：麥克風鍵切換語音辨識
+    case .dictation: return { $0?.performDictation() }
     case .shift(let currentState): return {
         switch currentState {
         case .lowercased: $0?.setKeyboardCase(.uppercased)
@@ -233,6 +235,8 @@ public extension KeyboardAction {
     case .nextLocale: return { $0?.selectNextLocale() }
     case .nextKeyboard: return { $0?.selectNextKeyboard() }
     case .primary: return { $0?.insertSymbol(Symbol(char: .newline)) }
+    // 語音鍵 patch：滑動/不經 RIME 的 release 也支援麥克風鍵
+    case .dictation: return { $0?.performDictation() }
     case .shift(let currentState): return {
         switch currentState {
         case .lowercased: $0?.setKeyboardCase(.uppercased)

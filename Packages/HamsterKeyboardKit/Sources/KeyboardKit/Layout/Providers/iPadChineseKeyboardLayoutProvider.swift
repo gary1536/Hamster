@@ -168,6 +168,8 @@ open class iPadChineseKeyboardLayoutProvider: SystemKeyboardLayoutProvider {
     result.append(.keyboardType(.classifySymbolic))
     result.append(.space)
     if let action = keyboardSwitchActionForBottomRow(for: context) { result.append(action) }
+    // 語音鍵 patch：在收起鍵盤前加入麥克風鍵
+    result.append(.dictation)
     result.append(.dismissKeyboard)
     return result
   }

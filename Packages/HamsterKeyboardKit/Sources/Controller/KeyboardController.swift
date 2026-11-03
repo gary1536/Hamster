@@ -88,7 +88,8 @@ public protocol KeyboardController: AnyObject {
 
    执行键盘启动的听写操作。
    */
-  // func performDictation()
+  /// 語音輸入（麥克風鍵）開關：Hamster 語音鍵 patch
+  func performDictation()
 
   /**
    Perform a text context sync.
@@ -152,4 +153,9 @@ public protocol KeyboardController: AnyObject {
 
   /// 返回上一次的键盘
   func returnLastKeyboard()
+}
+
+// 語音鍵 patch：為未實作者提供預設空實作，避免協定新增需求破壞其他 conformer
+public extension KeyboardController {
+  func performDictation() {}
 }

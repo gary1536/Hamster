@@ -64,6 +64,8 @@ open class iPhoneChineseKeyboardLayoutProvider: SystemKeyboardLayoutProvider {
       }
       return bottomSystemButtonWidth(for: context)
     case .nextKeyboard: return bottomSystemButtonWidth(for: context)
+    // 語音鍵 patch：麥克風鍵寬度同右下系統鍵
+    case .dictation: return bottomSystemButtonWidth(for: context)
     case .primary:
       if row == 3 && actions[row].count == 3 {
         return largeBottomWidth(for: context)
@@ -216,6 +218,8 @@ open class iPhoneChineseKeyboardLayoutProvider: SystemKeyboardLayoutProvider {
 //    if context.textDocumentProxy.returnKeyType == .go {
 //      result.append(.symbol(.init(char: ".")))
 //    }
+    // 語音鍵 patch：在 Return 前加入麥克風鍵
+    result.append(.dictation)
     result.append(keyboardReturnAction(for: context))
     return result
   }

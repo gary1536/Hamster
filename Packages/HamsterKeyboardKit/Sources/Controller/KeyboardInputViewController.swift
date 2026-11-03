@@ -758,6 +758,36 @@ open class KeyboardInputViewController: UIInputViewController, KeyboardControlle
 //      }
 //    }
 //  }
+
+  // MARK: - 語音鍵 patch（HamsterVoice）
+
+  /// 語音辨識模組（AVAudioEngine + SFSpeechRecognizer zh-TW）
+  public lazy var voiceModule: VoiceModule = {
+    let module = VoiceModule()
+    module.onFinalResult = { [weak self] text in
+      guard let self, !text.isEmpty else { return }
+      // 語音結果直接上屏，不經過 RIME 引擎
+      self.textDocumentProxy.insertText(text)
+      self.performTextContextSync()
+    }
+    module.onError = { message in
+      Logger.statistics.error("[Voice] \(message)")
+    }
+    return module
+  }()
+
+  /// 麥克風鍵動作：切換聆聽；開始前先提交嘸蝦米未上屏編碼
+  open func performDictation() {
+    if voiceModule.state == .listening {
+      voiceModule.stop()
+      return
+    }
+    if !rimeContext.userInputKey.isEmpty {
+      // 用 RIME 的 Return 提交目前 composition，避免語音插入時編碼殘留
+      insertRimeKeyCode(XK_Return)
+    }
+    voiceModule.start()
+  }
 }
 
 // MARK: - Private Functions
