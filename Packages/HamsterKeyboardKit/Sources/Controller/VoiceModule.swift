@@ -99,10 +99,8 @@ public final class VoiceModule: NSObject {
 
     let req = SFSpeechAudioBufferRecognitionRequest()
     req.shouldReportPartialResults = true
-    // 離線可用則優先離線（不需完整取用也可運作）
-    if recognizer.supportsOnDeviceRecognition {
-      req.requiresOnDeviceRecognition = true
-    }
+    // 2026-11-04 修正：不強制離線辨識——Apple 離線中文模型輸出簡體；
+    // 雲端 zh-TW 辨識（需允許完整取用）才回繁體。Gary 要繁體輸出。
     request = req
 
     let inputNode = audioEngine.inputNode
