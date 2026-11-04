@@ -570,6 +570,14 @@ open class KeyboardInputViewController: UIInputViewController, KeyboardControlle
     keyboardContext.setKeyboardType(type)
   }
 
+  open func shiftSwitchesToEnglishIfNeeded() -> Bool {
+    guard keyboardContext.keyboardType.isChinesePrimaryKeyboard, !rimeContext.asciiMode else { return false }
+    // 與 RIME 桌面版相同：未上屏的字根以英文送出，再切到英文模式
+    switchEnglishChinese()
+    keyboardContext.setKeyboardType(.chinese(.lowercased))
+    return true
+  }
+
   open func setKeyboardCase(_ casing: KeyboardCase) {
     if keyboardContext.keyboardType.isChinesePrimaryKeyboard {
       keyboardContext.setKeyboardType(.chinese(casing))
@@ -770,14 +778,17 @@ open class KeyboardInputViewController: UIInputViewController, KeyboardControlle
       self.textDocumentProxy.insertText(text)
       self.performTextContextSync()
     }
-    module.onError = { message in
+    module.onError = { [weak self] message in
       Logger.statistics.error("[Voice] \(message)")
+      FileManager.hamsterDiag("[voice] error: \(message)")
+      Task { @MainActor in self?.rimeContext.optionState = message }
     }
     return module
   }()
 
   /// 麥克風鍵動作：切換聆聽；開始前先提交嘸蝦米未上屏編碼
   open func performDictation() {
+    FileManager.hamsterDiag("[kb] dictation key tapped, voice state=\(voiceModule.state) fullAccess=\(hasFullAccess)")
     if voiceModule.state == .listening {
       voiceModule.stop()
       return

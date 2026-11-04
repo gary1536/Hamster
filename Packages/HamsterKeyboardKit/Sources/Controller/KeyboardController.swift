@@ -132,6 +132,12 @@ public protocol KeyboardController: AnyObject {
   func setKeyboardCase(_ casing: KeyboardCase)
 
   /**
+   Gary fork：中文鍵盤在中文模式時，單按 Shift 切換到英文模式（RIME ascii_mode）。
+   有處理時回傳 true；英文模式或其他鍵盤回傳 false，照常切換大小寫。
+   */
+  func shiftSwitchesToEnglishIfNeeded() -> Bool
+
+  /**
    Open a certain URL
 
    打开某个 URL
@@ -158,4 +164,9 @@ public protocol KeyboardController: AnyObject {
 // 語音鍵 patch：為未實作者提供預設空實作，避免協定新增需求破壞其他 conformer
 public extension KeyboardController {
   func performDictation() {}
+}
+
+// Gary fork：預設不處理 Shift（只有 KeyboardInputViewController 會切中英）
+public extension KeyboardController {
+  func shiftSwitchesToEnglishIfNeeded() -> Bool { false }
 }

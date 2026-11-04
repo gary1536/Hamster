@@ -5,7 +5,9 @@
 //  Created by morse on 2023/6/5.
 //
 
+import AVFoundation
 import HamsterKit
+import Speech
 import UIKit
 
 @main
@@ -18,7 +20,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
       try? FileManager.syncSandboxUserDataDirectoryToAppGroup(override: true)
       UserDefaults.hamster.overrideRimeDirectory = true
     }
+    requestVoicePermissionsIfNeeded()
     return true
+  }
+
+  /// Gary fork：鍵盤擴充不能跳出權限詢問（一詢問 iOS 就終止鍵盤、退回上一個鍵盤），
+  /// 所以由主 App 詢問麥克風與語音辨識權限。
+  private func requestVoicePermissionsIfNeeded() {
+    if SFSpeechRecognizer.authorizationStatus() == .notDetermined {
+      SFSpeechRecognizer.requestAuthorization { status in
+        FileManager.hamsterDiag("[app] speech authorization=\(status.rawValue)")
+      }
+    }
+    if AVCaptureDevice.authorizationStatus(for: .audio) == .notDetermined {
+      AVCaptureDevice.requestAccess(for: .audio) { granted in
+        FileManager.hamsterDiag("[app] microphone granted=\(granted)")
+      }
+    }
   }
 
   // MARK: UISceneSession Lifecycle

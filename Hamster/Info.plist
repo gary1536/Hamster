@@ -33,6 +33,10 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>嘸蝦米需要使用麥克風，讓鍵盤的語音鍵可以把您說的話轉成文字</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>嘸蝦米需要語音辨識，讓鍵盤的語音鍵可以把您說的話轉成文字</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

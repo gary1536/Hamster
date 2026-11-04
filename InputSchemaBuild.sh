@@ -93,6 +93,7 @@ mkdir -p $CI_PRIMARY_REPOSITORY_PATH/Resources/SharedSupport
 (
   cp $CI_PRIMARY_REPOSITORY_PATH/Resources/SharedSupport/hamster.yaml $DST_PATH
   cp $CI_PRIMARY_REPOSITORY_PATH/Resources/InputSchemas/boshiamy/boshiamy.*.yaml $DST_PATH
+  mkdir -p $DST_PATH/lua && cp $CI_PRIMARY_REPOSITORY_PATH/Resources/InputSchemas/boshiamy/lua/*.lua $DST_PATH/lua/  # 嘸蝦米指令、中英連打
   cd $DST_PATH/
   zip -r SharedSupport.zip *
 ) && cp $DST_PATH/SharedSupport.zip $CI_PRIMARY_REPOSITORY_PATH/Resources/SharedSupport/
@@ -106,6 +107,7 @@ rm -rf $OUTPUT/.$input_scheme_name && \
     # 內建嘸蝦米方案（Gary fork 加料）
     cp $CI_PRIMARY_REPOSITORY_PATH/Resources/InputSchemas/boshiamy/boshiamy.dict.yaml .
     cp $CI_PRIMARY_REPOSITORY_PATH/Resources/InputSchemas/boshiamy/boshiamy.schema.yaml .
+    mkdir -p lua && cp $CI_PRIMARY_REPOSITORY_PATH/Resources/InputSchemas/boshiamy/lua/*.lua lua/  # 嘸蝦米指令、中英連打
     sed -i '' 's/^  - schema: rime_ice/  - schema: boshiamy              # 嘸蝦米\n  - schema: rime_ice/' default.yaml
     # 提前编译
     # export DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH:$WORK/.deps/dist/lib

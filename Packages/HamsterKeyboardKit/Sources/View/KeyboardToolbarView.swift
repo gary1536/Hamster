@@ -43,6 +43,36 @@ class KeyboardToolbarView: NibLessView {
     return button
   }()
 
+  // MARK: Gary fork：嘸蝦米「繁／簡」「中／英」按鈕（顯示目前模式，點一下切換）
+
+  lazy var simplifiedModeButton: UIButton = makeModeButton(action: #selector(simplifiedModeButtonTapped))
+
+  lazy var asciiModeButton: UIButton = makeModeButton(action: #selector(asciiModeButtonTapped))
+
+  lazy var modeButtonStack: UIStackView = {
+    let view = UIStackView(arrangedSubviews: [simplifiedModeButton, asciiModeButton])
+    view.axis = .horizontal
+    view.spacing = 16
+    view.alignment = .center
+    view.translatesAutoresizingMaskIntoConstraints = false
+    return view
+  }()
+
+  private func makeModeButton(action: Selector) -> UIButton {
+    let button = UIButton(type: .custom)
+    button.translatesAutoresizingMaskIntoConstraints = false
+    button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .medium)
+    button.setTitleColor(style.toolbarButtonFrontColor, for: .normal)
+    button.backgroundColor = style.toolbarButtonBackgroundColor
+    button.layer.cornerRadius = 6
+    button.addTarget(self, action: action, for: .touchUpInside)
+    NSLayoutConstraint.activate([
+      button.widthAnchor.constraint(equalToConstant: 44),
+      button.heightAnchor.constraint(equalToConstant: 32),
+    ])
+    return button
+  }
+
   /// 解散键盘 Button
   lazy var dismissKeyboardButton: UIButton = {
     let button = UIButton(type: .custom)
@@ -110,6 +140,7 @@ class KeyboardToolbarView: NibLessView {
 
   override func constructViewHierarchy() {
     addSubview(commonFunctionBar)
+    commonFunctionBar.addSubview(modeButtonStack)
     if keyboardContext.displayAppIconButton {
       commonFunctionBar.addSubview(iconButton)
     }
@@ -124,6 +155,8 @@ class KeyboardToolbarView: NibLessView {
       commonFunctionBar.bottomAnchor.constraint(equalTo: bottomAnchor),
       commonFunctionBar.leadingAnchor.constraint(equalTo: leadingAnchor),
       commonFunctionBar.trailingAnchor.constraint(equalTo: trailingAnchor),
+      modeButtonStack.centerXAnchor.constraint(equalTo: commonFunctionBar.centerXAnchor),
+      modeButtonStack.centerYAnchor.constraint(equalTo: commonFunctionBar.centerYAnchor),
     ]
 
     if keyboardContext.displayAppIconButton {
@@ -150,6 +183,10 @@ class KeyboardToolbarView: NibLessView {
   }
 
   override func setupAppearance() {
+    for button in [simplifiedModeButton, asciiModeButton] {
+      button.setTitleColor(style.toolbarButtonFrontColor, for: .normal)
+      button.backgroundColor = style.toolbarButtonBackgroundColor
+    }
     self.style = appearance.candidateBarStyle
     if keyboardContext.displayAppIconButton {
       iconButton.tintColor = style.toolbarButtonFrontColor
@@ -160,6 +197,21 @@ class KeyboardToolbarView: NibLessView {
   }
 
   func combine() {
+    // Gary fork：模式按鈕文字跟著 RIME 選項更新
+    rimeContext.$boshiamySimplified
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] in
+        self?.simplifiedModeButton.setTitle($0 ? "簡" : "繁", for: .normal)
+      }
+      .store(in: &subscriptions)
+
+    rimeContext.$boshiamyAsciiMode
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] in
+        self?.asciiModeButton.setTitle($0 ? "英" : "中", for: .normal)
+      }
+      .store(in: &subscriptions)
+
     rimeContext.userInputKeyPublished
       .receive(on: DispatchQueue.main)
       .sink { [weak self] in
@@ -203,6 +255,14 @@ class KeyboardToolbarView: NibLessView {
   @objc func openHamsterAppTouchUpAction() {
     iconButton.backgroundColor = style.toolbarButtonPressedBackgroundColor
     actionHandler.handle(.release, on: .url(URL(string: "hamster://dev.fuxiao.app.hamster/main"), id: "openHamster"))
+  }
+
+  @objc func simplifiedModeButtonTapped() {
+    rimeContext.toggleBoshiamySimplified()
+  }
+
+  @objc func asciiModeButtonTapped() {
+    rimeContext.switchEnglishChinese()
   }
 
   @objc func touchCancel() {

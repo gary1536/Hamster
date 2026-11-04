@@ -64,6 +64,52 @@ public final class VoiceModule: NSObject {
     return handle
   }
 
+  // MARK: - 打繁出簡（Gary fork）：OpenCC t2s
+
+  private var _t2sHandle: opencc_t? = nil
+
+  /// t2s.json 與 s2t.json 一起部署在 App Group 的 SharedSupport/opencc
+  private var t2sHandle: opencc_t? {
+    if let existing = _t2sHandle {
+      return existing
+    }
+    let configURL = FileManager.appGroupSharedSupportDirectoryURL
+      .appendingPathComponent("opencc", isDirectory: true)
+      .appendingPathComponent("t2s.json")
+    guard FileManager.default.fileExists(atPath: configURL.path) else {
+      FileManager.hamsterDiag("[voice] t2s.json NOT FOUND at \(configURL.path)")
+      return nil
+    }
+    let handle = configURL.path.withCString { opencc_open($0) }
+    if handle == UnsafeMutableRawPointer(bitPattern: -1) {
+      FileManager.hamsterDiag("[voice] opencc_open t2s INVALID")
+      return nil
+    }
+    _t2sHandle = handle
+    return handle
+  }
+
+  /// 語音結果上屏前的轉換：一律先轉繁體；鍵盤在打繁出簡模式時再轉成簡體
+  func convertForOutput(_ text: String) -> String {
+    let traditional = toTraditional(text)
+    let simplified = UserDefaults.hamster.bool(forKey: RimeContext.boshiamyOptionKey("simplification"))
+    FileManager.hamsterDiag("[voice] output mode simplified=\(simplified)")
+    guard simplified else { return traditional }
+    guard let handle = t2sHandle else {
+      FileManager.hamsterDiag("[voice] t2s NO HANDLE, keep traditional")
+      return traditional
+    }
+    let converted: String = traditional.withCString { cString in
+      guard let out = opencc_convert_utf8(handle, cString, strlen(cString)) else {
+        return traditional
+      }
+      defer { opencc_convert_utf8_free(out) }
+      return String(cString: out)
+    }
+    FileManager.hamsterDiag("[voice] simplified: \(traditional.prefix(12)) -> \(converted.prefix(12))")
+    return converted
+  }
+
   func toTraditional(_ text: String) -> String {
     guard let handle = openccHandle else {
       FileManager.hamsterDiag("[voice] toTraditional NO HANDLE, passthrough: \(text.prefix(20))")
@@ -92,32 +138,24 @@ public final class VoiceModule: NSObject {
   }
 
   public func start() {
+    let speechAuth = SFSpeechRecognizer.authorizationStatus()
+    let micAuth = AVCaptureDevice.authorizationStatus(for: .audio)
+    FileManager.hamsterDiag("[voice] start state=\(state) speechAuth=\(speechAuth.rawValue) micAuth=\(micAuth.rawValue)")
     guard state == .idle else { return }
-    SFSpeechRecognizer.requestAuthorization { auth in
-      guard auth == .authorized else {
-        DispatchQueue.main.async { [weak self] in
-          self?.onError?("請在「設定→隱私→語音辨識」開啟權限")
-        }
-        return
-      }
-      AVCaptureDevice.requestAccess(for: .audio) { granted in
-        guard granted else {
-          DispatchQueue.main.async { [weak self] in
-            self?.onError?("請在「設定→隱私→麥克風」開啟權限（鍵盤需同時開啟允許完整取用）")
-          }
-          return
-        }
-        DispatchQueue.main.async { [weak self] in
-          guard let self else { return }
-          do {
-            try self.begin()
-          } catch {
-            self.onError?("無法開始錄音：\(error.localizedDescription)")
-          }
-        }
-      }
+    // Gary fork：鍵盤擴充不能跳出權限詢問（一詢問 iOS 就終止鍵盤、退回上一個鍵盤），
+    // 權限改由主 App 詢問；這裡只檢查狀態。
+    guard speechAuth == .authorized, micAuth == .authorized else {
+      let notAsked = speechAuth == .notDetermined || micAuth == .notDetermined
+      onError?(notAsked ? "請先開嘸蝦米 App 允許麥克風" : "請到設定開啟麥克風與語音辨識")
+      return
+    }
+    do {
+      try begin()
+    } catch {
+      onError?("無法開始錄音：\(error.localizedDescription)")
     }
   }
+
 
   public func stop() {
     guard task != nil || state == .listening else { return }
@@ -139,9 +177,12 @@ public final class VoiceModule: NSObject {
       return
     }
 
+    FileManager.hamsterDiag("[voice] begin recognizerAvailable=\(recognizer.isAvailable)")
     let session = AVAudioSession.sharedInstance()
     try session.setCategory(.record, mode: .measurement, options: .duckOthers)
+    FileManager.hamsterDiag("[voice] session category set")
     try session.setActive(true, options: .notifyOthersOnDeactivation)
+    FileManager.hamsterDiag("[voice] session active")
 
     let req = SFSpeechAudioBufferRecognitionRequest()
     req.shouldReportPartialResults = true
@@ -161,6 +202,7 @@ public final class VoiceModule: NSObject {
     }
     audioEngine.prepare()
     try audioEngine.start()
+    FileManager.hamsterDiag("[voice] audio engine started")
 
     setState(.listening)
 
@@ -171,7 +213,7 @@ public final class VoiceModule: NSObject {
         let isFinal = result.isFinal
         DispatchQueue.main.async {
           if isFinal {
-            self.onFinalResult?(self.toTraditional(text))
+            self.onFinalResult?(self.convertForOutput(text))
             self.stop()
           } else {
             self.onPartialResult?(text)

@@ -99,6 +99,33 @@ public class RimeContext {
   @MainActor @Published
   public var optionState: String? = nil
 
+  // MARK: Gary fork：嘸蝦米模式（繁／簡、中／英、中英連打）
+
+  /// 打繁出簡模式（RIME 選項 simplification），給工具列「繁／簡」按鈕顯示
+  @MainActor @Published
+  public var boshiamySimplified: Bool = false
+
+  /// 英文模式（RIME 選項 ascii_mode），給工具列「中／英」按鈕顯示
+  @MainActor @Published
+  public var boshiamyAsciiMode: Bool = false
+
+  /// 需要記住的 RIME 選項：librime 1.8.5 用程式切換選項時不會寫入 save_options，
+  /// 所以由鍵盤存到 App Group 的 UserDefaults，重開鍵盤時還原。語音模組也讀這裡的 simplification。
+  public static let boshiamyPersistedOptions = ["simplification", "ascii_mode", "boshiamy_en_off"]
+
+  public static func boshiamyOptionKey(_ name: String) -> String {
+    "boshiamy.option.\(name)"
+  }
+
+  /// Lua 指令提示候選的 comment（見 boshiamy_commands.lua）
+  static let boshiamyCommandComment = "〔指令〕"
+
+  /// App 點選指令提示時送給 Lua 的鍵（XK_F35）
+  static let boshiamyCommandKeyCode: Int32 = 0xffe0
+
+  /// 還原完成前不記錄，避免方案載入時的預設值把存檔蓋掉
+  private var boshiamyOptionPersistenceEnabled = false
+
   /// 划动分页模式下，当前页码，从 0 开始
   public lazy var pageIndex: Int = 0
 
@@ -235,8 +262,32 @@ public extension RimeContext {
     setupRimeInputSchema()
     FileManager.hamsterDiag("[kb] after setup: current=\(currentSchema?.schemaId ?? "nil") select=\(selectSchemas.map { $0.schemaId }) ascii=\(Rime.shared.isAsciiMode()) running=\(Rime.shared.isRunning())")
 
+    // Gary fork：還原上次的繁簡、中英、中英連打狀態
+    await restoreBoshiamyOptions()
+
     // 中英状态同步
     await setAsciiMode(Rime.shared.isAsciiMode())
+  }
+
+  /// Gary fork：還原記住的 RIME 選項，之後開始記錄選項變更
+  @MainActor
+  func restoreBoshiamyOptions() {
+    for name in Self.boshiamyPersistedOptions {
+      guard let saved = UserDefaults.hamster.object(forKey: Self.boshiamyOptionKey(name)) as? Bool else { continue }
+      if Rime.shared.getOption(name) != saved {
+        Rime.shared.setOption(name, value: saved)
+      }
+    }
+    boshiamySimplified = Rime.shared.getOption("simplification")
+    boshiamyAsciiMode = Rime.shared.getOption("ascii_mode")
+    boshiamyOptionPersistenceEnabled = true
+    FileManager.hamsterDiag("[kb] restore options: simplification=\(boshiamySimplified) ascii=\(boshiamyAsciiMode) en_off=\(Rime.shared.getOption("boshiamy_en_off"))")
+  }
+
+  /// Gary fork：工具列「繁／簡」按鈕：在繁體與打繁出簡之間切換
+  @MainActor
+  func toggleBoshiamySimplified() {
+    Rime.shared.setOption("simplification", value: !Rime.shared.getOption("simplification"))
   }
 
   /// RIME 关闭
@@ -538,6 +589,12 @@ public extension RimeContext {
   /// 根据索引选择候选字
   @MainActor
   func selectCandidate(index: Int) {
+    // Gary fork：點選嘸蝦米指令提示（,,T ,,CT ,,C ,,E）時不上屏，改送 F35 讓 Lua 執行指令
+    if Rime.shared.candidateListWithIndex(index: index, andCount: 1).first?.comment == Self.boshiamyCommandComment {
+      _ = Rime.shared.inputKeyCode(Self.boshiamyCommandKeyCode)
+      syncContext()
+      return
+    }
     _ = Rime.shared.selectCandidate(index: index)
     syncContext()
   }
@@ -613,6 +670,18 @@ extension RimeContext: IRimeNotificationDelegate {
     // 中英模式
     if option.hasSuffix("ascii_mode") {
       self.setAsciiMode(optionState)
+    }
+
+    // Gary fork：嘸蝦米模式狀態（按鈕文字）與記住選項
+    if optionName == "simplification" {
+      self.boshiamySimplified = optionState
+    }
+    if optionName == "ascii_mode" {
+      self.boshiamyAsciiMode = optionState
+    }
+    if boshiamyOptionPersistenceEnabled, Self.boshiamyPersistedOptions.contains(optionName) {
+      UserDefaults.hamster.set(optionState, forKey: Self.boshiamyOptionKey(optionName))
+      FileManager.hamsterDiag("[kb] option saved: \(optionName)=\(optionState)")
     }
 
     // 设置 rime option 对应的值

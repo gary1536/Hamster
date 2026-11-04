@@ -169,6 +169,16 @@ public class Rime {
     rimeAPI.openSchema(schema)
   }
 
+  /// 讀取目前 session 的 RIME 選項（Gary fork）
+  public func getOption(_ name: String) -> Bool {
+    return rimeAPI.getOption(session, andOption: name)
+  }
+
+  /// 設定目前 session 的 RIME 選項（Gary fork）；會觸發 onChangeMode 通知
+  public func setOption(_ name: String, value: Bool) {
+    rimeAPI.setOption(session, andOption: name, andValue: value)
+  }
+
   public func simplifiedChineseMode(key: String) -> Bool {
     return rimeAPI.getOption(session, andOption: key)
   }

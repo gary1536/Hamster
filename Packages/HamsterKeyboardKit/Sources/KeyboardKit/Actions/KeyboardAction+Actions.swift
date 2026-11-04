@@ -163,6 +163,8 @@ public extension KeyboardAction {
     // 語音鍵 patch：麥克風鍵切換語音辨識
     case .dictation: return { $0?.performDictation() }
     case .shift(let currentState): return {
+        // Gary fork：中文模式下單按 Shift 切到英文；英文模式下照常切換大小寫
+        if $0?.shiftSwitchesToEnglishIfNeeded() == true { return }
         switch currentState {
         case .lowercased: $0?.setKeyboardCase(.uppercased)
         case .auto, .capsLocked, .uppercased: $0?.setKeyboardCase(.lowercased)
@@ -238,6 +240,8 @@ public extension KeyboardAction {
     // 語音鍵 patch：滑動/不經 RIME 的 release 也支援麥克風鍵
     case .dictation: return { $0?.performDictation() }
     case .shift(let currentState): return {
+        // Gary fork：中文模式下單按 Shift 切到英文；英文模式下照常切換大小寫
+        if $0?.shiftSwitchesToEnglishIfNeeded() == true { return }
         switch currentState {
         case .lowercased: $0?.setKeyboardCase(.uppercased)
         case .auto, .capsLocked, .uppercased: $0?.setKeyboardCase(.lowercased)
