@@ -37,7 +37,8 @@ typedef uintptr_t RimeSessionId;
 - (void)initialize:(IRimeTraits *)traits;
 - (void)finalize;
 
-- (void)startMaintenance:(BOOL)fullCheck;
+/// 失敗時（maintenance 執行緒拋出例外）回傳 NO 並設定 error，不會讓 App 閃退。
+- (BOOL)startMaintenance:(BOOL)fullCheck error:(NSError **)error;
 
 - (BOOL)preBuildAllSchemas;
 - (void)deployerInitialize:(IRimeTraits *)traits;

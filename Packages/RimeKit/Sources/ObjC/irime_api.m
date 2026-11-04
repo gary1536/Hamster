@@ -4,6 +4,9 @@
 
 static id<IRimeNotificationDelegate> notificationDelegate = nil;
 
+// 定義在 irime_maintenance.mm（ObjC++，可接住 C++ 例外）
+extern NSString *_Nullable IRimeFinishMaintenanceSafely(void);
+
 // 定义加载模块
 // static RIME_MODULE_LIST(hamster_modules, "default", "levers", "lua");
 
@@ -349,13 +352,22 @@ static RimeLeversApi *get_levers() {
   RimeFinalize();
 }
 
-- (void)startMaintenance:(BOOL)fullCheck {
+- (BOOL)startMaintenance:(BOOL)fullCheck error:(NSError **)error {
   // check for configuration updates
   if (RimeStartMaintenance((Bool)fullCheck) && RimeIsMaintenancing()) {
-    // update squirrel config
-    RimeJoinMaintenanceThread();
-    RimeDeployConfigFile("squirrel.yaml", "config_version");
+    // 等待 maintenance 結束並 update squirrel config；例外在 .mm 裡接住
+    NSString *message = IRimeFinishMaintenanceSafely();
+    if (message != nil) {
+      if (error != NULL) {
+        NSString *description = [NSString stringWithFormat:@"RIME 部署失敗：%@", message];
+        *error = [NSError errorWithDomain:@"RimeKit.Maintenance"
+                                     code:1
+                                 userInfo:@{NSLocalizedDescriptionKey: description}];
+      }
+      return NO;
+    }
   }
+  return YES;
 }
 
 - (BOOL)preBuildAllSchemas {

@@ -280,6 +280,7 @@ public extension RimeContext {
         sharedSupportDir: FileManager.sandboxSharedSupportDirectory.path,
         userDataDir: FileManager.sandboxUserDataDirectory.path
       ), maintenance: true, fullCheck: true)
+      try Rime.shared.throwIfMaintenanceFailed()
     }
     // 此 API 根据用户配置的 scheme_list 参数获取列表，当方案不提供 schema_list 参数时，获取为空
     var schemas = Rime.shared.getSchemas().sorted()
@@ -307,6 +308,7 @@ public extension RimeContext {
             sharedSupportDir: FileManager.sandboxSharedSupportDirectory.path,
             userDataDir: FileManager.sandboxUserDataDirectory.path
           ), maintenance: true, fullCheck: true)
+          try Rime.shared.throwIfMaintenanceFailed()
         }
       }
     }
@@ -390,6 +392,7 @@ public extension RimeContext {
         sharedSupportDir: FileManager.sandboxSharedSupportDirectory.path,
         userDataDir: FileManager.sandboxUserDataDirectory.path
       ), maintenance: true, fullCheck: true)
+      try Rime.shared.throwIfMaintenanceFailed()
     }
     let handled = Rime.shared.API().syncUserData()
     Logger.statistics.info("RIME sync userData handled: \(handled)")
@@ -431,6 +434,7 @@ public extension RimeContext {
       sharedSupportDir: FileManager.sandboxSharedSupportDirectory.path,
       userDataDir: FileManager.sandboxUserDataDirectory.path
     ), maintenance: true, fullCheck: true)
+    try Rime.shared.throwIfMaintenanceFailed()
 
     let schemas = Rime.shared.getSchemas().sorted()
 

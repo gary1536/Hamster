@@ -92,11 +92,47 @@ public class Rime {
 
     initialize(traits)
 
+    lastMaintenanceError = nil
     if maintenance {
-      rimeAPI.startMaintenance(fullCheck)
+      removeEmptyBuildFiles(userDataDir: (traits ?? self.traits)?.userDataDir)
+      do {
+        try rimeAPI.startMaintenance(fullCheck)
+      } catch {
+        lastMaintenanceError = error
+        logger.error("rime maintenance error: \(error.localizedDescription)")
+        FileManager.hamsterDiag("[rime] maintenance 失敗：\(error.localizedDescription)")
+      }
     }
 
     // session = rimeAPI.createSession()
+  }
+
+  /// 最近一次 start(maintenance: true) 的錯誤；nil 表示成功或沒有執行 maintenance
+  public private(set) var lastMaintenanceError: Error?
+
+  /// 若最近一次 maintenance 失敗，關閉 RIME 並拋出錯誤（給主 App 的部署流程使用）
+  public func throwIfMaintenanceFailed() throws {
+    guard let error = lastMaintenanceError else { return }
+    shutdown()
+    throw error
+  }
+
+  /// Gary fork：librime 1.8.5 對 0 byte 的 build/*.bin（prism、table、reverse）做 mmap 會丟例外，
+  /// 部署前先刪掉，讓 librime 重新建立。
+  private func removeEmptyBuildFiles(userDataDir: String?) {
+    guard let userDataDir = userDataDir, !userDataDir.isEmpty else { return }
+    let buildURL = URL(fileURLWithPath: userDataDir).appendingPathComponent("build")
+    let fm = FileManager.default
+    guard let files = try? fm.contentsOfDirectory(at: buildURL, includingPropertiesForKeys: [.fileSizeKey]) else { return }
+    for file in files where file.pathExtension == "bin" {
+      guard let size = try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize, size == 0 else { continue }
+      do {
+        try fm.removeItem(at: file)
+        FileManager.hamsterDiag("[rime] 已刪除 0 byte 的 \(file.lastPathComponent)，部署時重建")
+      } catch {
+        FileManager.hamsterDiag("[rime] 刪除 0 byte 的 \(file.lastPathComponent) 失敗：\(error.localizedDescription)")
+      }
+    }
   }
 
   public func deploy(_ traits: IRimeTraits? = nil) -> Bool {
