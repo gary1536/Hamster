@@ -39,7 +39,14 @@ public final class VoiceModule: NSObject {
 
   /// Apple 雲端 zh-TW 辨識仍常回簡體，上屏前用 OpenCC 強制轉繁。
   /// 資料檔隨 SharedSupport.zip 部署在 App Group：.../opencc/s2t.json
-  private lazy var openccHandle: opencc_t? = {
+  /// 使用 stored + computed：s2t.json 可能在實例建立後才部署（鍵盤首次啟動時 App Group 尚未寫入），
+  /// 所以每次呼叫都重新檢查，避免 handle 永久為 nil。
+  private var _openccHandle: opencc_t? = nil
+
+  private var openccHandle: opencc_t? {
+    if let existing = _openccHandle {
+      return existing
+    }
     let configURL = FileManager.appGroupSharedSupportDirectoryURL
       .appendingPathComponent("opencc", isDirectory: true)
       .appendingPathComponent("s2t.json")
@@ -52,9 +59,10 @@ public final class VoiceModule: NSObject {
       FileManager.hamsterDiag("[voice] opencc_open INVALID (config found but opencc failed)")
       return nil
     }
+    _openccHandle = handle
     FileManager.hamsterDiag("[voice] opencc ready")
     return handle
-  }()
+  }
 
   func toTraditional(_ text: String) -> String {
     guard let handle = openccHandle else {

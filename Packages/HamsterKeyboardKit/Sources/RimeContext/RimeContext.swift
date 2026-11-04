@@ -215,10 +215,20 @@ public extension RimeContext {
     if writeOK { try? fmD.removeItem(at: probeURL) }
     FileManager.hamsterDiag("[kb] bootstrapped=\(bootstrapped) ssDefault=\(fmD.fileExists(atPath: ssD.appendingPathComponent("default.yaml").path)) s2t=\(fmD.fileExists(atPath: ssD.appendingPathComponent("opencc/s2t.json").path)) udDefault=\(fmD.fileExists(atPath: udD.appendingPathComponent("default.yaml").path)) udBoshiamyTable=\(fmD.fileExists(atPath: udD.appendingPathComponent("build/boshiamy.table.bin").path)) udWritable=\(writeOK)")
 
+    // 2026-11-04 修正：AppGroup userData 若不可寫（鍵盤擴充進程寫入失敗），
+    // 退回到沙箱 userData，否則 librime 無法寫入使用者狀態，導致候選字不出現。
+    let userDataDir: URL
+    if writeOK {
+      userDataDir = FileManager.appGroupUserDataDirectoryURL
+    } else {
+      userDataDir = FileManager.sandboxUserDataDirectory
+      FileManager.hamsterDiag("[kb] AppGroup userData 不可寫，退回沙箱 userData")
+    }
+
     // 启动
     Rime.shared.start(Rime.createTraits(
       sharedSupportDir: FileManager.appGroupSharedSupportDirectoryURL.path,
-      userDataDir: hasFullAccess ? FileManager.appGroupUserDataDirectoryURL.path : FileManager.sandboxUserDataDirectory.path
+      userDataDir: userDataDir.path
     ))
 
     // 设置初始输入方案
