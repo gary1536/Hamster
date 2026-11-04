@@ -199,21 +199,15 @@ public extension RimeContext {
   func start(hasFullAccess: Bool) async {
     Rime.shared.setNotificationDelegate(self)
 
-    // 自愈（Gary fork）：AppGroup 詞庫缺失時從擴充自帶 zip 解壓
-    let bootstrapped = FileManager.bootstrapAppGroupRimeDirectoriesIfNeeded(
+    // 自愈（Gary fork v2）：只解輕量的 SharedSupport（3.3MB，供 OpenCC 轉繁用）。
+    // 不再在鍵盤內跑 maintenance 重建詞庫——實測證實會被 iOS RUNNINGBOARD
+    // 以超時/記憶體為由強殺（08:18:46 崩潰日誌）；重活留給主 App 部署。
+    _ = FileManager.bootstrapAppGroupRimeDirectoriesIfNeeded(
       supportZip: Bundle.main.url(forResource: "SharedSupport", withExtension: "zip"),
-      userDataZip: Bundle.main.url(forResource: "rime-ice", withExtension: "zip")
+      userDataZip: nil
     )
 
     // 启动
-    if bootstrapped {
-      // 剛解壓過原始 yaml，需維護模式重建 build 產物
-      Rime.shared.start(Rime.createTraits(
-        sharedSupportDir: FileManager.appGroupSharedSupportDirectoryURL.path,
-        userDataDir: hasFullAccess ? FileManager.appGroupUserDataDirectoryURL.path : FileManager.sandboxUserDataDirectory.path
-      ), maintenance: true, fullCheck: true)
-      Rime.shared.shutdown()
-    }
     Rime.shared.start(Rime.createTraits(
       sharedSupportDir: FileManager.appGroupSharedSupportDirectoryURL.path,
       userDataDir: hasFullAccess ? FileManager.appGroupUserDataDirectoryURL.path : FileManager.sandboxUserDataDirectory.path
