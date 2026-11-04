@@ -821,8 +821,11 @@ static RimeLeversApi *get_levers() {
 }
 
 - (NSString *) getStateLabelAbbreviated:(RimeSessionId) session optionName:(NSString *) option state:(BOOL)state abbreviated:(BOOL)abbreviated {
-  struct rime_string_slice_t stateLabel = rime_get_api()->get_state_label_abbreviated(session, [option UTF8String], state ? 1 : 0, abbreviated ? 1 : 0);
-  return stateLabel.str ? [NSString stringWithUTF8String: stateLabel.str] : @"";
+  // librime 1.8.5 的 RimeApi 結構沒有 get_state_label_abbreviated 欄位（1.11 才加入），
+  // 讀它會越界拿到垃圾指標 → 鍵盤擴充 EXC_BAD_ACCESS@0x0 崩潰（實測崩潰日誌證實）。
+  // 改用 1.8.5 現存的 get_state_label（abbreviated 參數忽略）。
+  const char *label = rime_get_api()->get_state_label(session, [option UTF8String], state ? 1 : 0);
+  return label ? [NSString stringWithUTF8String: label] : @"";
 }
 
 @end

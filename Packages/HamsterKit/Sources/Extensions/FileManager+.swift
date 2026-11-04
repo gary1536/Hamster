@@ -408,6 +408,20 @@ public extension FileManager {
     )
   }
 
+  /// 診斷用：把修補過程寫入 AppGroup 根目錄的 log 檔（遠端拉取可見）
+  static func hamsterRepairLog(_ message: String) {
+    let line = "\(Date()) \(message)\n"
+    guard let data = line.data(using: .utf8) else { return }
+    let url = FileManager.shareURL.deletingLastPathComponent().appendingPathComponent("hamster_repair.log")
+    if let handle = try? FileHandle(forWritingTo: url) {
+      handle.seekToEndOfFile()
+      handle.write(data)
+      try? handle.close()
+    } else {
+      try? data.write(to: url)
+    }
+  }
+
   /// 仓鼠语音键 patch：确保 AppGroup 词库目录存在。
   /// 若 AppGroup 的 SharedSupport 缺失（重置中途被杀/首次未部署），
   /// 从传入的 bundle zip 自助解压；回传是否做了 bootstrap（需要维护模式重建）。
@@ -417,6 +431,7 @@ public extension FileManager {
     let agUser = appGroupUserDataDirectoryURL
     let marker = agShared.appendingPathComponent("default.yaml")
     if fm.fileExists(atPath: marker.path) { return false }
+    hamsterRepairLog("[kb] bootstrap start supportZip=\(supportZip != nil) userDataZip=\(userDataZip != nil)")
 
     var did = false
     if let z = supportZip, fm.fileExists(atPath: z.path) {
@@ -424,9 +439,13 @@ public extension FileManager {
         try fm.createDirectory(at: agShared, withIntermediateDirectories: true)
         try fm.unzipItem(at: z, to: agShared)
         did = true
+        hamsterRepairLog("[kb] SharedSupport unzipped OK")
       } catch {
+        hamsterRepairLog("[kb] SharedSupport unzip FAILED: \(error)")
         Logger.statistics.error("bootstrap SharedSupport error: \(error.localizedDescription)")
       }
+    } else {
+      hamsterRepairLog("[kb] supportZip missing in bundle")
     }
     let userMarker = agUser.appendingPathComponent("default.yaml")
     if !fm.fileExists(atPath: userMarker.path), let z = userDataZip, fm.fileExists(atPath: z.path) {
@@ -434,7 +453,9 @@ public extension FileManager {
         try fm.createDirectory(at: agUser, withIntermediateDirectories: true)
         try fm.unzipItem(at: z, to: agUser)
         did = true
+        hamsterRepairLog("[kb] UserData unzipped OK")
       } catch {
+        hamsterRepairLog("[kb] UserData unzip FAILED: \(error)")
         Logger.statistics.error("bootstrap UserData error: \(error.localizedDescription)")
       }
     }
@@ -447,13 +468,20 @@ public extension FileManager {
     let agMarker = appGroupSharedSupportDirectoryURL.appendingPathComponent("default.yaml")
     if fm.fileExists(atPath: agMarker.path) { return }
     let sbMarker = sandboxSharedSupportDirectory.appendingPathComponent("default.yaml")
-    guard fm.fileExists(atPath: sbMarker.path) else { return }
+    guard fm.fileExists(atPath: sbMarker.path) else {
+      hamsterRepairLog("[app] repair skipped: sandbox SharedSupport empty")
+      return
+    }
+    hamsterRepairLog("[app] repair start")
     do {
       try syncSandboxSharedSupportDirectoryToAppGroup(override: true)
+      hamsterRepairLog("[app] SharedSupport synced OK")
       try syncSandboxUserDataDirectoryToAppGroup(override: true)
+      hamsterRepairLog("[app] UserData synced OK")
       UserDefaults.hamster.overrideRimeDirectory = true
       Logger.statistics.info("AppGroup 词库缺失，已从沙盒补同步")
     } catch {
+      hamsterRepairLog("[app] repair FAILED: \(error)")
       Logger.statistics.error("repairAppGroup error: \(error.localizedDescription)")
     }
   }
