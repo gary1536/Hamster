@@ -5,12 +5,14 @@
 //  Created by morse on 2023/6/5.
 //
 
+import HamsterKit
 import UIKit
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
   func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-    // Override point for customization after application launch.
+    // 自愈（Gary fork v2）：不依賴 lazy 單例，在啟動最早點直接補同步詞庫
+    FileManager.repairAppGroupFromSandboxIfNeeded()
     return true
   }
 
