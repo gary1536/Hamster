@@ -696,6 +696,7 @@ public extension RimeContext {
     }
 
     // Logger.statistics.debug("syncContext: userInputText = \(userInputText), commitText = \(commitText)")
+    FileManager.hamsterDiag("[kb] sync schema=\(Rime.shared.currentSchema()?.schemaId ?? "nil") preedit=\(userInputText) commit=\(commitText) menu=\(rimeContext?.menu?.candidates?.count ?? -1) cands=\(candidates.count) paging=\(useContextPaging) ascii=\(Rime.shared.isAsciiMode())")
 
     // 查看输入法状态
     let status = Rime.shared.status()
