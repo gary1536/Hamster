@@ -2,7 +2,9 @@
 # encoding: utf-8
 # 原 imfuxiao/LibrimeKit 已 404（2026-11 確認）。目前全部改用 amorphobia/LibrimeKit v0.1.0
 # （librime 1.8.5）。曾試過 thomfang/LibrimeKit-iOS v0.2.2（librime 1.16.1），但它沒有匯出 C API，已棄用。
-# 已知問題：這份 iOS librime 建出的 *.prism.bin 是壞的，App 改用預編 prism 覆蓋（見 PrebuiltPrismBuild.sh）。
+# 注意：librime 與 OpenCC 各帶一份 darts-clone（id_type 分別是 4 與 8 bytes，名稱相同），連結進同一個 App
+# 會發生 ODR 衝突，App 內建出的 *.prism.bin 是壞的。請改用 librimeLocalBuild.sh 從原始碼編譯
+# （它把 librime 的 Darts 改名為 RimeDarts）。
 # Hamster 的 pbxproj 已移除過期的 librime-sbxlm / boost_locale 引用。
 set -e
 

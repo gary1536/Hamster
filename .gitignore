@@ -27,4 +27,8 @@ package/
 
 # VueJS
 /Packages/HamsterFileServer/Front/node_modules
-/Packages/HamsterFileServer/Front/dist/*Frameworks/
+/Packages/HamsterFileServer/Front/dist/*
+Frameworks/
+
+# librimeLocalBuild.sh 的中間檔
+/.librime-build/

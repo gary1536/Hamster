@@ -26,7 +26,7 @@ let package = Package(
       ],
       path: "Sources",
       resources: [
-        // Gary fork：iOS librime 建出的 prism 損壞，改用 macOS 預編版（見 PrebuiltPrismBuild.sh）
+        // Gary fork：保險用的預編 prism（Darts ODR 衝突會讓 App 建出壞 prism，見 PrebuiltPrismBuild.sh）
         .copy("Resources/PrebuiltPrism"),
       ]),
     .testTarget(

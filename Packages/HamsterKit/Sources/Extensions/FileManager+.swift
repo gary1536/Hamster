@@ -409,11 +409,11 @@ public extension FileManager {
   }
 
   /// 鍵盤端診斷：寫進「各程序自己的沙盒 Documents」，devicectl 拉 appDataContainer 一定看得到
-  // MARK: - Gary fork：修復 iOS librime 建壞的 prism
+  // MARK: - Gary fork：修復建壞的 prism（保險）
 
-  /// Frameworks/librime.xcframework（amorphobia/LibrimeKit v0.1.0，librime 1.8.5）在 iOS 上
-  /// 建出的 *.prism.bin 是壞的：Darts double-array 的單元以 8 bytes 間隔寫入且只寫進前半，
-  /// 任何編碼都查不到（嘸蝦米打字只會回原碼）。
+  /// librime 與 OpenCC 各帶一份 darts-clone（id_type 分別是 4 與 8 bytes，名稱相同），連結進同一個
+  /// App 會發生 ODR 衝突，建出的 *.prism.bin 單元以 8 bytes 間隔寫入且只寫進前半，任何編碼都查不到。
+  /// librimeLocalBuild.sh 編的框架已把 librime 的 Darts 改名為 RimeDarts 而根治；這裡保留作為保險。
   /// 這裡用 App 內附、由 macOS librime 1.8.5 預編的 prism 覆蓋 build 目錄中的同名檔。
   /// 只有在格式、詞典 checksum、音節數都相同時才覆蓋，並沿用目標檔的方案 checksum，
   /// 讓 librime 認為 prism 是最新的而不再重建。預編檔用 PrebuiltPrismBuild.sh 產生。

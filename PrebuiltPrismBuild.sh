@@ -3,10 +3,10 @@
 # 用 macOS 版 librime 1.8.5（.deps，由 InputSchemaBuild.sh 下載）重新編譯嘸蝦米的 prism，
 # 放進 HamsterKit 套件資源 Sources/Resources/PrebuiltPrism/。
 #
-# 為什麼需要：Frameworks/librime.xcframework（amorphobia/LibrimeKit v0.1.0，librime 1.8.5）
-# 在 iOS 上建出的 *.prism.bin 是壞的（Darts double-array 單元寫成 8 bytes 間隔且只寫入前半），
-# 查不到任何編碼。App 在把沙箱詞庫同步到 AppGroup 前，會用這份預編檔覆蓋
-# （見 HamsterKit FileManager.repairBrokenPrisms）。
+# 為什麼需要：librime 與 OpenCC 各帶一份 darts-clone（id_type 分別是 4 與 8 bytes，名稱相同），
+# 連結進同一個 App 會發生 ODR 衝突，App 內建出的 *.prism.bin 是壞的（單元 8 bytes 間隔、只寫前半）。
+# librimeLocalBuild.sh 已根治（librime 的 Darts 改名為 RimeDarts）；這份預編檔是保險：
+# App 在把沙箱詞庫同步到 AppGroup 前，若 prism 與預編檔不同就覆蓋（見 FileManager.repairBrokenPrisms）。
 # 修改 boshiamy.dict.yaml 之後要重跑這支腳本，否則詞典 checksum 不符、不會套用。
 set -e
 
