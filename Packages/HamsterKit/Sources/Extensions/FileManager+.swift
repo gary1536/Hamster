@@ -409,6 +409,53 @@ public extension FileManager {
   }
 
   /// 鍵盤端診斷：寫進「各程序自己的沙盒 Documents」，devicectl 拉 appDataContainer 一定看得到
+  // MARK: - Gary fork：修復 iOS librime 建壞的 prism
+
+  /// Frameworks/librime.xcframework（amorphobia/LibrimeKit v0.1.0，librime 1.8.5）在 iOS 上
+  /// 建出的 *.prism.bin 是壞的：Darts double-array 的單元以 8 bytes 間隔寫入且只寫進前半，
+  /// 任何編碼都查不到（嘸蝦米打字只會回原碼）。
+  /// 這裡用 App 內附、由 macOS librime 1.8.5 預編的 prism 覆蓋 build 目錄中的同名檔。
+  /// 只有在格式、詞典 checksum、音節數都相同時才覆蓋，並沿用目標檔的方案 checksum，
+  /// 讓 librime 認為 prism 是最新的而不再重建。預編檔用 PrebuiltPrismBuild.sh 產生。
+  static let prebuiltPrismSchemas = ["boshiamy"]
+
+  @discardableResult
+  static func repairBrokenPrisms(userDataDirectory: URL = sandboxUserDataDirectory) -> [String] {
+    var repaired = [String]()
+    for schema in prebuiltPrismSchemas {
+      let target = userDataDirectory.appendingPathComponent("build/\(schema).prism.bin")
+      guard
+        let bundledURL = Bundle.module.url(forResource: "\(schema).prism", withExtension: "bin", subdirectory: "PrebuiltPrism"),
+        var bundled = try? Data(contentsOf: bundledURL),
+        let current = try? Data(contentsOf: target)
+      else { continue }
+
+      // Metadata：format[32]、dict checksum@32、schema checksum@36、音節數@40、拼寫數@44
+      let headerSize = 48
+      guard bundled.count > headerSize, current.count > headerSize else { continue }
+      let sameFormat = bundled.prefix(32) == current.prefix(32)
+      let sameDict = bundled[32 ..< 36] == current[32 ..< 36]
+      let sameCounts = bundled[40 ..< 48] == current[40 ..< 48]
+      guard sameFormat, sameDict, sameCounts else {
+        hamsterDiag("[app] prism \(schema) 未覆蓋：預編檔與詞典不符（format=\(sameFormat) dict=\(sameDict) counts=\(sameCounts)），請重跑 PrebuiltPrismBuild.sh")
+        continue
+      }
+
+      // 沿用目標檔的方案 checksum
+      bundled.replaceSubrange(36 ..< 40, with: current[36 ..< 40])
+      if bundled == current { continue }
+
+      do {
+        try bundled.write(to: target, options: .atomic)
+        repaired.append(schema)
+        hamsterDiag("[app] prism \(schema) 已用預編檔覆蓋（\(current.count) bytes）")
+      } catch {
+        hamsterDiag("[app] prism \(schema) 覆蓋失敗：\(error.localizedDescription)")
+      }
+    }
+    return repaired
+  }
+
   static func hamsterDiag(_ message: String) {
     NSLog("[HamsterDiag] %@", message)
     let line = "\(Date()) \(message)\n"
@@ -551,6 +598,7 @@ public extension FileManager {
   // 同步 Sandbox 目录下 UserData 目录至 AppGroup 目录
   static func syncSandboxUserDataDirectoryToAppGroup(override: Bool = false) throws {
     Logger.statistics.info("rime syncSandboxUserDataDirectoryToApGroup: override \(override)")
+    repairBrokenPrisms()
     try FileManager.copyDirectory(override: override, src: sandboxUserDataDirectory, dst: appGroupUserDataDirectoryURL)
   }
 
@@ -563,6 +611,7 @@ public extension FileManager {
   /// 拷贝 Sandbox 下 UserData 目录至 AppGroup 下 UserData 目录
   static func copySandboxUserDataDirectoryToAppGroup(_ filterRegex: [String] = [], filterMatchBreak: Bool = true) throws {
     Logger.statistics.info("rime copySandboxUserDataDirectoryToAppGroupUserDirectory: filterRegex \(filterRegex)")
+    repairBrokenPrisms()
     try FileManager.incrementalCopy(src: sandboxUserDataDirectory, dst: appGroupUserDataDirectoryURL, filterRegex: filterRegex, filterMatchBreak: filterMatchBreak)
   }
 

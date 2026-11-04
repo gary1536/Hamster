@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # encoding: utf-8
-# 原 imfuxiao/LibrimeKit 已 404（2026-11 確認）。改用兩個可用來源合併：
-#   - thomfang/LibrimeKit-iOS v0.2.2：librime 1.16.1 全套（缺 boost_atomic）
-#   - amorphobia/LibrimeKit v0.1.0：補 boost_atomic（含 ios-arm64 切片）
+# 原 imfuxiao/LibrimeKit 已 404（2026-11 確認）。目前全部改用 amorphobia/LibrimeKit v0.1.0
+# （librime 1.8.5）。曾試過 thomfang/LibrimeKit-iOS v0.2.2（librime 1.16.1），但它沒有匯出 C API，已棄用。
+# 已知問題：這份 iOS librime 建出的 *.prism.bin 是壞的，App 改用預編 prism 覆蓋（見 PrebuiltPrismBuild.sh）。
 # Hamster 的 pbxproj 已移除過期的 librime-sbxlm / boost_locale 引用。
 set -e
 

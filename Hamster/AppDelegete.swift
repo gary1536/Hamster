@@ -13,6 +13,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
   func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
     // 自愈（Gary fork v2）：不依賴 lazy 單例，在啟動最早點直接補同步詞庫
     FileManager.repairAppGroupFromSandboxIfNeeded()
+    // Gary fork：沙箱的 prism 若是 iOS librime 建壞的，換成預編檔後同步給鍵盤
+    if !FileManager.repairBrokenPrisms().isEmpty {
+      try? FileManager.syncSandboxUserDataDirectoryToAppGroup(override: true)
+      UserDefaults.hamster.overrideRimeDirectory = true
+    }
     return true
   }
 

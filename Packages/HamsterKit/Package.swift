@@ -24,7 +24,11 @@ let package = Package(
         "ZIPFoundation",
         "Yams",
       ],
-      path: "Sources"),
+      path: "Sources",
+      resources: [
+        // Gary fork：iOS librime 建出的 prism 損壞，改用 macOS 預編版（見 PrebuiltPrismBuild.sh）
+        .copy("Resources/PrebuiltPrism"),
+      ]),
     .testTarget(
       name: "HamsterKitTests",
       dependencies: ["HamsterKit"],
