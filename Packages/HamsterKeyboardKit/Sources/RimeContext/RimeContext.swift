@@ -198,14 +198,22 @@ public extension RimeContext {
   /// 注意：仅用于键盘扩展调用
   func start(hasFullAccess: Bool) async {
     Rime.shared.setNotificationDelegate(self)
+    FileManager.hamsterDiag("[kb] start hasFullAccess=\(hasFullAccess)")
 
     // 自愈（Gary fork v2）：只解輕量的 SharedSupport（3.3MB，供 OpenCC 轉繁用）。
     // 不再在鍵盤內跑 maintenance 重建詞庫——實測證實會被 iOS RUNNINGBOARD
     // 以超時/記憶體為由強殺（08:18:46 崩潰日誌）；重活留給主 App 部署。
-    _ = FileManager.bootstrapAppGroupRimeDirectoriesIfNeeded(
+    let bootstrapped = FileManager.bootstrapAppGroupRimeDirectoriesIfNeeded(
       supportZip: Bundle.main.url(forResource: "SharedSupport", withExtension: "zip"),
       userDataZip: nil
     )
+    let fmD = FileManager.default
+    let ssD = FileManager.appGroupSharedSupportDirectoryURL
+    let udD = FileManager.appGroupUserDataDirectoryURL
+    let probeURL = udD.appendingPathComponent("hamster_write_probe.tmp")
+    let writeOK = (try? "x".data(using: .utf8)!.write(to: probeURL)) != nil
+    if writeOK { try? fmD.removeItem(at: probeURL) }
+    FileManager.hamsterDiag("[kb] bootstrapped=\(bootstrapped) ssDefault=\(fmD.fileExists(atPath: ssD.appendingPathComponent("default.yaml").path)) s2t=\(fmD.fileExists(atPath: ssD.appendingPathComponent("opencc/s2t.json").path)) udDefault=\(fmD.fileExists(atPath: udD.appendingPathComponent("default.yaml").path)) udBoshiamyTable=\(fmD.fileExists(atPath: udD.appendingPathComponent("build/boshiamy.table.bin").path)) udWritable=\(writeOK)")
 
     // 启动
     Rime.shared.start(Rime.createTraits(
@@ -215,6 +223,7 @@ public extension RimeContext {
 
     // 设置初始输入方案
     setupRimeInputSchema()
+    FileManager.hamsterDiag("[kb] after setup: current=\(currentSchema?.schemaId ?? "nil") select=\(selectSchemas.map { $0.schemaId }) ascii=\(Rime.shared.isAsciiMode()) running=\(Rime.shared.isRunning())")
 
     // 中英状态同步
     await setAsciiMode(Rime.shared.isAsciiMode())
@@ -472,6 +481,7 @@ public extension RimeContext {
       schema = currentSchema
     }
     let handle = Rime.shared.setSchema(schema.schemaId)
+    FileManager.hamsterDiag("[kb] setSchema \(schema.schemaId) handle=\(handle)")
     Logger.statistics.info("self.rimeEngine set schema: \(schema.schemaName), handle = \(handle)")
   }
 
@@ -621,6 +631,7 @@ public extension RimeContext {
   func tryHandleInputText(_ text: String) -> Bool {
     // 由rime处理全部符号
     let handled = Rime.shared.inputKey(text)
+    FileManager.hamsterDiag("[kb] inputText=\(text) handled=\(handled) input=\(Rime.shared.getInputKeys())")
 
     // 处理失败则返回 inputText
     guard handled else { return false }
@@ -649,6 +660,7 @@ public extension RimeContext {
   func tryHandleInputCode(_ code: Int32, modifier: Int32 = 0) -> Bool {
     // 由rime处理全部符号
     let handled = Rime.shared.inputKeyCode(code, modifier: modifier)
+    FileManager.hamsterDiag("[kb] keyCode=\(code) handled=\(handled) input=\(Rime.shared.getInputKeys())")
     // 处理失败则返回 inputText
     guard handled else { return false }
 

@@ -408,17 +408,39 @@ public extension FileManager {
     )
   }
 
-  /// 診斷用：把修補過程寫入 AppGroup 根目錄的 log 檔（遠端拉取可見）
-  static func hamsterRepairLog(_ message: String) {
+  /// 鍵盤端診斷：寫進「各程序自己的沙盒 Documents」，devicectl 拉 appDataContainer 一定看得到
+  static func hamsterDiag(_ message: String) {
+    NSLog("[HamsterDiag] %@", message)
     let line = "\(Date()) \(message)\n"
     guard let data = line.data(using: .utf8) else { return }
-    let url = FileManager.shareURL.deletingLastPathComponent().appendingPathComponent("hamster_repair.log")
+    let url = sandboxDirectory.appendingPathComponent("hamster_diag.log")
     if let handle = try? FileHandle(forWritingTo: url) {
       handle.seekToEndOfFile()
       handle.write(data)
       try? handle.close()
     } else {
       try? data.write(to: url)
+    }
+  }
+
+  /// 診斷用：把修補過程寫入 AppGroup 根目錄的 log 檔（遠端拉取可見）+ NSLog 到主控台
+  static func hamsterRepairLog(_ message: String) {
+    NSLog("[HamsterRepair] %@", message)
+    let line = "\(Date()) \(message)\n"
+    guard let data = line.data(using: .utf8) else { return }
+    // 同時寫兩處：AppGroup 根目錄 + 各自程序沙盒 Documents（後者 devicectl 拉取一定看得到）
+    let urls = [
+      FileManager.shareURL.deletingLastPathComponent().appendingPathComponent("hamster_repair.log"),
+      sandboxDirectory.appendingPathComponent("hamster_repair.log"),
+    ]
+    for url in urls {
+      if let handle = try? FileHandle(forWritingTo: url) {
+        handle.seekToEndOfFile()
+        handle.write(data)
+        try? handle.close()
+      } else {
+        try? data.write(to: url)
+      }
     }
   }
 
@@ -465,8 +487,9 @@ public extension FileManager {
   /// 主 App 启动时修补：AppGroup 缺词库但沙盒有（重置被中断）→ 补同步
   static func repairAppGroupFromSandboxIfNeeded() {
     let fm = FileManager.default
+    NSLog("[HamsterRepair] === repair called; agRoot=%@", FileManager.shareURL.deletingLastPathComponent().path)
     let agMarker = appGroupSharedSupportDirectoryURL.appendingPathComponent("default.yaml")
-    if fm.fileExists(atPath: agMarker.path) { return }
+    if fm.fileExists(atPath: agMarker.path) { NSLog("[HamsterRepair] agMarker EXISTS, no-op"); return }
     let sbMarker = sandboxSharedSupportDirectory.appendingPathComponent("default.yaml")
     guard fm.fileExists(atPath: sbMarker.path) else {
       hamsterRepairLog("[app] repair skipped: sandbox SharedSupport empty")

@@ -44,17 +44,23 @@ public final class VoiceModule: NSObject {
       .appendingPathComponent("opencc", isDirectory: true)
       .appendingPathComponent("s2t.json")
     guard FileManager.default.fileExists(atPath: configURL.path) else {
+      FileManager.hamsterDiag("[voice] s2t.json NOT FOUND at \(configURL.path)")
       return nil
     }
     let handle = configURL.path.withCString { opencc_open($0) }
     if handle == UnsafeMutableRawPointer(bitPattern: -1) {
+      FileManager.hamsterDiag("[voice] opencc_open INVALID (config found but opencc failed)")
       return nil
     }
+    FileManager.hamsterDiag("[voice] opencc ready")
     return handle
   }()
 
   func toTraditional(_ text: String) -> String {
-    guard let handle = openccHandle else { return text }
+    guard let handle = openccHandle else {
+      FileManager.hamsterDiag("[voice] toTraditional NO HANDLE, passthrough: \(text.prefix(20))")
+      return text
+    }
     let converted: String = text.withCString { cString in
       guard let out = opencc_convert_utf8(handle, cString, strlen(cString)) else {
         return text
@@ -62,6 +68,7 @@ public final class VoiceModule: NSObject {
       defer { opencc_convert_utf8_free(out) }
       return String(cString: out)
     }
+    FileManager.hamsterDiag("[voice] converted: \(text.prefix(12)) -> \(converted.prefix(12))")
     return converted
   }
 
