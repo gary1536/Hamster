@@ -66,11 +66,11 @@ keyboard:
   # 启用符号按键
   displayClassifySymbolButton: false
   # 启用空格左侧按键
-  displaySpaceLeftButton: false
+  displaySpaceLeftButton: true
   spaceLeftButtonProcessByRIME: true
   keyValueOfSpaceLeftButton: ","
   # 启用空格右侧按键
-  displaySpaceRightButton: false
+  displaySpaceRightButton: true
   spaceRightButtonProcessByRIME: true
   keyValueOfSpaceRightButton: "."
   # 启用中英切换按键
@@ -246,6 +246,7 @@ swipe:
           swipe:
             - direction: up
               action: character(.)
+              processByRIME: true  # 嘸蝦米：符號碼送進 RIME（，。「」、與部首）
             - direction: down
               action: character(>)
         - action: character(d)
@@ -267,12 +268,14 @@ swipe:
           swipe:
             - direction: up
               action: character([)
+              processByRIME: true  # 嘸蝦米：符號碼送進 RIME（，。「」、與部首）
             - direction: down
               action: character({)
         - action: character(g)
           swipe:
             - direction: up
               action: character(])
+              processByRIME: true  # 嘸蝦米：符號碼送進 RIME（，。「」、與部首）
             - direction: down
               action: character(})
         - action: character(h)
@@ -303,6 +306,7 @@ swipe:
           swipe:
             - direction: up
               action: character(')
+              processByRIME: true  # 嘸蝦米：符號碼送進 RIME（，。「」、與部首）
             - direction: down
               action: character(")
         - action: character(m)
@@ -375,6 +379,7 @@ swipe:
           swipe:
             - direction: up
               action: character(,)
+              processByRIME: true  # 嘸蝦米：符號碼送進 RIME（，。「」、與部首）
             - direction: down
               action: character(<)
         - action: character(y)

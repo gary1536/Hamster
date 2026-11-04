@@ -252,8 +252,8 @@ extension SettingsViewModel {
     // 部署 RIME
     try rimeViewModel.rimeContext.deployment(configuration: &configuration)
 
-    // TODO: 内置雾凇方案，将默认选择方案改为雾凇拼音
-    let rimeSchema = RimeSchema(schemaId: "rime_ice", schemaName: "雾凇拼音")
+    // Gary fork：預設方案改為嘸蝦米（上游寫死雾凇拼音）
+    let rimeSchema = RimeSchema(schemaId: "boshiamy", schemaName: "嘸蝦米")
     rimeViewModel.rimeContext.selectSchemas = [rimeSchema]
     rimeViewModel.rimeContext.currentSchema = rimeSchema
 

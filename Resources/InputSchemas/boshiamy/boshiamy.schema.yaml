@@ -38,7 +38,7 @@ engine:
     - punct_segmentor
     - fallback_segmentor
   translators:
-    - echo_translator
+    # 不用 echo_translator：查不到字時不把字根碼當候選送出；按空白會清掉錯碼（見 key_binder）
     - punct_translator
     - table_translator
   filters:
