@@ -63,6 +63,8 @@ open class KeyboardInputViewController: UIInputViewController, KeyboardControlle
 
   override open func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
+    // Gary fork：從主 App 語音頁回來時送出辨識結果
+    insertPendingVoiceText()
 //    viewWillHandleDictationResult()
   }
 
@@ -788,17 +790,49 @@ open class KeyboardInputViewController: UIInputViewController, KeyboardControlle
 
   /// 麥克風鍵動作：切換聆聽；開始前先提交嘸蝦米未上屏編碼
   open func performDictation() {
-    FileManager.hamsterDiag("[kb] dictation key tapped, voice state=\(voiceModule.state) fullAccess=\(hasFullAccess)")
-    if voiceModule.state == .listening {
-      voiceModule.stop()
-      return
-    }
+    // Gary fork：iOS 不允許自訂鍵盤錄音（AVAudioEngine.start 回 'what'），
+    // 改為打開主 App 的語音頁；辨識結果經 App Group 交回，鍵盤重新出現時送出。
+    FileManager.hamsterDiag("[kb] dictation key tapped -> open app voice page, fullAccess=\(hasFullAccess)")
     if !rimeContext.userInputKey.isEmpty {
       // 用 RIME 的 Return 提交目前 composition，避免語音插入時編碼殘留
       insertRimeKeyCode(XK_Return)
     }
-    voiceModule.start()
+    guard hasFullAccess else {
+      rimeContext.optionState = "語音需要開啟「允許完整取用」"
+      return
+    }
+    openHostAppURL(BoshiamyVoiceHandoff.voiceURL)
   }
+
+  /// Gary fork：送出主 App 語音頁交回來的文字（取出後即清除）
+  func insertPendingVoiceText() {
+    guard let text = BoshiamyVoiceHandoff.take() else { return }
+    FileManager.hamsterDiag("[kb] insert voice text: \(text.prefix(12))")
+    textDocumentProxy.insertText(text)
+  }
+
+  /// Gary fork：從鍵盤打開 URL。新版 iOS 的 UIApplication 只剩 openURL:options:completionHandler:，
+  /// 舊的 openURL: 已無作用；鍵盤擴充不能直接呼叫 UIApplication.open，所以沿著 responder chain 用 runtime 呼叫。
+  func openHostAppURL(_ url: URL) {
+    var responder: UIResponder? = self
+    while let current = responder {
+      if let application = current as? UIApplication {
+        let selector = NSSelectorFromString("openURL:options:completionHandler:")
+        if let method = class_getInstanceMethod(type(of: application), selector) {
+          typealias OpenURL = @convention(c) (AnyObject, Selector, NSURL, NSDictionary, ((Bool) -> Void)?) -> Void
+          let open = unsafeBitCast(method_getImplementation(method), to: OpenURL.self)
+          open(application, selector, url as NSURL, NSDictionary(), { success in
+            FileManager.hamsterDiag("[kb] open app url success=\(success)")
+          })
+          return
+        }
+      }
+      responder = current.next
+    }
+    FileManager.hamsterDiag("[kb] open app url: UIApplication not found, fallback openURL:")
+    openUrl(url)
+  }
+
 }
 
 // MARK: - Private Functions

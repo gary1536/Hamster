@@ -90,7 +90,7 @@ public final class VoiceModule: NSObject {
   }
 
   /// 語音結果上屏前的轉換：一律先轉繁體；鍵盤在打繁出簡模式時再轉成簡體
-  func convertForOutput(_ text: String) -> String {
+  public func convertForOutput(_ text: String) -> String {
     let traditional = toTraditional(text)
     let simplified = UserDefaults.hamster.bool(forKey: RimeContext.boshiamyOptionKey("simplification"))
     FileManager.hamsterDiag("[voice] output mode simplified=\(simplified)")

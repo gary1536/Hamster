@@ -5,6 +5,7 @@
 //  Created by morse on 2023/6/5.
 //
 
+import HamsterKeyboardKit
 import HamsteriOS
 import HamsterKit
 import UIKit
@@ -21,6 +22,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UISceneDelegate {
       self.window = window
       window.makeKeyAndVisible()
     }
+
+    // Gary fork：鍵盤語音鍵打開語音頁
+    if presentVoiceCaptureIfNeeded(connectionOptions.urlContexts.first?.url) { return }
 
     /// 外部导入 zip 文件
     if let url = connectionOptions.urlContexts.first?.url {
@@ -61,6 +65,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UISceneDelegate {
       window.makeKeyAndVisible()
     }
 
+    // Gary fork：鍵盤語音鍵打開語音頁
+    if presentVoiceCaptureIfNeeded(URLContexts.first?.url) { return }
+
     /// 外部导入 zip 文件
     if let url = URLContexts.first?.url {
       if url.pathExtension.lowercased() == "zip" {
@@ -78,6 +85,23 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UISceneDelegate {
         HamsterAppDependencyContainer.shared.mainViewModel.navigation(subView)
       }
     }
+  }
+
+  /// Gary fork：URL 是 hamster://dev.fuxiao.app.hamster/voice 時顯示語音頁
+  private func presentVoiceCaptureIfNeeded(_ url: URL?) -> Bool {
+    guard let url, url.lastPathComponent == BoshiamyVoiceHandoff.voicePathComponent else { return false }
+    DispatchQueue.main.async { [weak self] in
+      guard let root = self?.window?.rootViewController else { return }
+      var top = root
+      while let presented = top.presentedViewController {
+        top = presented
+      }
+      if top is VoiceCaptureViewController { return }
+      let controller = VoiceCaptureViewController()
+      controller.modalPresentationStyle = .fullScreen
+      top.present(controller, animated: true)
+    }
+    return true
   }
 
   /// 程序已启动下，通过 quick action 打开
