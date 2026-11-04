@@ -37,8 +37,8 @@
 		C00C26E72B069D6B00E92F89 /* libmarisa.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C00C26C52B069D6A00E92F89 /* libmarisa.xcframework */; };
 		C00C26E82B069D6B00E92F89 /* librime.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C00C26C62B069D6A00E92F89 /* librime.xcframework */; };
 		C00C26E92B069D6B00E92F89 /* librime.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C00C26C62B069D6A00E92F89 /* librime.xcframework */; };
-		C00C26F12B069D6B00E92F89 /* librime.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C00C26C62B069D6A00E92F89 /* librime.xcframework */; };
 		C00C26EC2B069E0400E92F89 /* HamsterKeyboardKit in Frameworks */ = {isa = PBXBuildFile; productRef = C00C26EB2B069E0400E92F89 /* HamsterKeyboardKit */; };
+		C00C26F12B069D6B00E92F89 /* librime.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C00C26C62B069D6A00E92F89 /* librime.xcframework */; };
 		C01396FC2AB499D80043674A /* RimeSyncIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C01396F92AB499CA0043674A /* RimeSyncIntent.swift */; };
 		C01396FD2AB499D80043674A /* RimeDeployIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C01396FA2AB499CA0043674A /* RimeDeployIntent.swift */; };
 		C02435B42A0490230080CFB4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C02435932A0490220080CFB4 /* Assets.xcassets */; };
@@ -58,10 +58,10 @@
 		C0A602B32A185D88000DC924 /* HamsterKeyboardInputViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C000CA9D296EA72600EC5323 /* HamsterKeyboardInputViewController.swift */; };
 		C0C7EAEC29E5A236008D4EE1 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C0C7EAEF29E5A236008D4EE1 /* InfoPlist.strings */; };
 		C0D672B429F1E0E7002D0439 /* SharedSupport.zip in Copy Rime SharedSupport */ = {isa = PBXBuildFile; fileRef = C0D672B329F1E066002D0439 /* SharedSupport.zip */; };
-		C0FACE102B069D6B00E92F89 /* SharedSupport.zip in Resources */ = {isa = PBXBuildFile; fileRef = C0D672B329F1E066002D0439 /* SharedSupport.zip */; };
-		C0FACE112B069D6B00E92F89 /* rime-ice.zip in Resources */ = {isa = PBXBuildFile; fileRef = C0D856CA2B026FDA003DB275 /* rime-ice.zip */; };
 		C0D856CC2B026FF6003DB275 /* rime-ice.zip in Copy Rime SharedSupport */ = {isa = PBXBuildFile; fileRef = C0D856CA2B026FDA003DB275 /* rime-ice.zip */; };
 		C0DA3F422AFB5AE9003E74DA /* RimeDeployBackgroundIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DA3F412AFB5AE9003E74DA /* RimeDeployBackgroundIntent.swift */; };
+		C0FACE102B069D6B00E92F89 /* SharedSupport.zip in Resources */ = {isa = PBXBuildFile; fileRef = C0D672B329F1E066002D0439 /* SharedSupport.zip */; };
+		C0FACE112B069D6B00E92F89 /* rime-ice.zip in Resources */ = {isa = PBXBuildFile; fileRef = C0D856CA2B026FDA003DB275 /* rime-ice.zip */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -752,7 +752,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Hamster/Assets/Preview Content\"";
-				DEVELOPMENT_TEAM = M4N6995A28;
+				DEVELOPMENT_TEAM = K867VJTU5R;
 				ENABLE_BITCODE = NO;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -767,7 +767,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -796,7 +796,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Hamster/Assets/Preview Content\"";
-				DEVELOPMENT_TEAM = M4N6995A28;
+				DEVELOPMENT_TEAM = K867VJTU5R;
 				ENABLE_BITCODE = NO;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -811,7 +811,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -837,13 +837,13 @@
 				CODE_SIGN_ENTITLEMENTS = HamsterKeyboard/HamsterKeyboard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = M4N6995A28;
+				DEVELOPMENT_TEAM = K867VJTU5R;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HamsterKeyboard/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = HamsterKeyboard;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -869,13 +869,13 @@
 				CODE_SIGN_ENTITLEMENTS = HamsterKeyboard/HamsterKeyboard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = M4N6995A28;
+				DEVELOPMENT_TEAM = K867VJTU5R;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HamsterKeyboard/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = HamsterKeyboard;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -899,13 +899,13 @@
 				CODE_SIGN_ENTITLEMENTS = SbxlmKeyboard/SbxlmKeyboard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = M4N6995A28;
+				DEVELOPMENT_TEAM = K867VJTU5R;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SbxlmKeyboard/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = SbxlmKeyboard;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -931,13 +931,13 @@
 				CODE_SIGN_ENTITLEMENTS = SbxlmKeyboard/SbxlmKeyboard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = M4N6995A28;
+				DEVELOPMENT_TEAM = K867VJTU5R;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SbxlmKeyboard/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = SbxlmKeyboard;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
