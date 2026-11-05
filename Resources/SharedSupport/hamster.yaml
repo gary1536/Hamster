@@ -145,6 +145,9 @@ keyboard:
   # 中文26键显示大写字符
   showUppercasedCharacterOnChineseKeyboard: true
 
+  # 嘸蝦米：中文26键右下角显示字根提示
+  showBoshiamyRootHint: true
+
   # 按键下方边框
   enableButtonUnderBorder: true
 

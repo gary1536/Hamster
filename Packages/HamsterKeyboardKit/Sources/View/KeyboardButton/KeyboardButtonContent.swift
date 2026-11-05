@@ -67,6 +67,23 @@ public class KeyboardButtonContentView: NibLessView {
     return label
   }()
 
+  /// 嘸蝦米字根提示 Label（右下角）
+  private lazy var rootHintLabel: UILabel = {
+    let label = UILabel(frame: .zero)
+    label.numberOfLines = 1
+    label.textAlignment = .right
+    label.adjustsFontSizeToFitWidth = true
+    label.minimumScaleFactor = 0.6
+    return label
+  }()
+
+  /// 是否显示嘸蝦米字根提示：只在内置中文26键的字母键上显示
+  private var rootHintText: String? {
+    guard keyboardContext.showBoshiamyRootHint else { return nil }
+    guard case .chinese = keyboardContext.keyboardType else { return nil }
+    return BoshiamyRootHints.hint(for: action)
+  }
+
   /// 按钮显示文本
   var buttonText: String {
     if keyboardContext.keyboardType.isCustom, let buttonText = item.key?.label.text, !buttonText.isEmpty {
@@ -100,6 +117,11 @@ public class KeyboardButtonContentView: NibLessView {
   override public func constructViewHierarchy() {
     addSubview(contentView)
 
+    if let rootHint = rootHintText {
+      rootHintLabel.text = rootHint
+      addSubview(rootHintLabel)
+    }
+
     for swipe in item.swipes {
       if swipe.display, swipe.direction == .up {
         upSwipeLabel.text = swipe.labelText
@@ -116,6 +138,7 @@ public class KeyboardButtonContentView: NibLessView {
   override public func setupAppearance() {
     upSwipeLabel.textColor = style.swipeForegroundColor
     downSwipeLabel.textColor = style.swipeForegroundColor
+    rootHintLabel.textColor = style.swipeForegroundColor
   }
 
   override public func layoutSubviews() {
@@ -127,8 +150,16 @@ public class KeyboardButtonContentView: NibLessView {
     if oldBounds.width == .zero || oldBounds.height == .zero {
       upSwipeLabel.frame = .zero
       downSwipeLabel.frame = .zero
+      rootHintLabel.frame = .zero
       contentView.frame = .zero
       return
+    }
+
+    if rootHintLabel.superview != nil {
+      let hintHeight = self.oldBounds.height * 0.3
+      let hintWidth = self.oldBounds.width * 0.5
+      rootHintLabel.font = UIFont.systemFont(ofSize: min(10, hintHeight * 0.9))
+      rootHintLabel.frame = CGRect(x: self.oldBounds.width - hintWidth - 2, y: self.oldBounds.height - hintHeight, width: hintWidth, height: hintHeight)
     }
 
     if keyboardContext.disableSwipeLabel {

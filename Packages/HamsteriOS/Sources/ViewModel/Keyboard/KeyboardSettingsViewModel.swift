@@ -206,6 +206,16 @@ public class KeyboardSettingsViewModel: ObservableObject, Hashable, Identifiable
     }
   }
 
+  public var showBoshiamyRootHint: Bool {
+    get {
+      HamsterAppDependencyContainer.shared.configuration.keyboard?.showBoshiamyRootHint ?? true
+    }
+    set {
+      HamsterAppDependencyContainer.shared.configuration.keyboard?.showBoshiamyRootHint = newValue
+      HamsterAppDependencyContainer.shared.applicationConfiguration.keyboard?.showBoshiamyRootHint = newValue
+    }
+  }
+
   public var enableButtonUnderBorder: Bool {
     get {
       HamsterAppDependencyContainer.shared.configuration.keyboard?.enableButtonUnderBorder ?? true
@@ -836,6 +846,13 @@ public class KeyboardSettingsViewModel: ObservableObject, Hashable, Identifiable
           toggleValue: { [unowned self] in showUppercasedCharacterOnChineseKeyboard },
           toggleHandled: { [unowned self] in
             showUppercasedCharacterOnChineseKeyboard = $0
+          }),
+        .init(
+          text: "顯示嘸蝦米字根",
+          type: .toggle,
+          toggleValue: { [unowned self] in showBoshiamyRootHint },
+          toggleHandled: { [unowned self] in
+            showBoshiamyRootHint = $0
           }),
         .init(
           text: "启用分号按键",

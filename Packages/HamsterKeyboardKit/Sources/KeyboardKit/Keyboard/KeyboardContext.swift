@@ -534,6 +534,11 @@ public class KeyboardContext: ObservableObject {
     hamsterConfiguration?.keyboard?.showUppercasedCharacterOnChineseKeyboard ?? true
   }
 
+  /// 嘸蝦米：中文26键显示字根提示
+  var showBoshiamyRootHint: Bool {
+    hamsterConfiguration?.keyboard?.showBoshiamyRootHint ?? true
+  }
+
   var enableNineGridOfNumericKeyboard: Bool {
     hamsterConfiguration?.keyboard?.enableNineGridOfNumericKeyboard ?? false
   }
