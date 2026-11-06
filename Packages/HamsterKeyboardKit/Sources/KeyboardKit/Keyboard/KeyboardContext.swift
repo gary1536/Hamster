@@ -539,6 +539,11 @@ public class KeyboardContext: ObservableObject {
     hamsterConfiguration?.keyboard?.showBoshiamyRootHint ?? true
   }
 
+  /// 嘸蝦米：候選列的常用詞與聯想
+  var enableBoshiamyPhraseSuggestion: Bool {
+    hamsterConfiguration?.keyboard?.enableBoshiamyPhraseSuggestion ?? true
+  }
+
   var enableNineGridOfNumericKeyboard: Bool {
     hamsterConfiguration?.keyboard?.enableNineGridOfNumericKeyboard ?? false
   }

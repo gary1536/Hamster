@@ -95,6 +95,19 @@ class KeyboardToolbarView: NibLessView {
     return view
   }()
 
+  /// Gary fork：候選列中間的「常用詞／聯想」（沒在打字時顯示）
+  lazy var phraseBarView: BoshiamyPhraseBarView = {
+    let view = BoshiamyPhraseBarView(
+      textColor: style.candidateTextColor,
+      pressedColor: style.toolbarButtonPressedBackgroundColor,
+      font: style.candidateTextFont
+    )
+    view.onSelect = { [weak self] text in
+      self?.rimeContext.boshiamyPhrases.select(text)
+    }
+    return view
+  }()
+
   /// 候选文字视图
   lazy var candidateBarView: CandidateBarView = {
     let view = CandidateBarView(
@@ -140,7 +153,9 @@ class KeyboardToolbarView: NibLessView {
 
   override func constructViewHierarchy() {
     addSubview(commonFunctionBar)
-    commonFunctionBar.addSubview(modeButtonStack)
+    // Gary fork：「繁」「中」固定在候選列最右邊（打字時也顯示）
+    addSubview(modeButtonStack)
+    commonFunctionBar.addSubview(phraseBarView)
     if keyboardContext.displayAppIconButton {
       commonFunctionBar.addSubview(iconButton)
     }
@@ -154,10 +169,23 @@ class KeyboardToolbarView: NibLessView {
       commonFunctionBar.topAnchor.constraint(equalTo: topAnchor),
       commonFunctionBar.bottomAnchor.constraint(equalTo: bottomAnchor),
       commonFunctionBar.leadingAnchor.constraint(equalTo: leadingAnchor),
-      commonFunctionBar.trailingAnchor.constraint(equalTo: trailingAnchor),
-      modeButtonStack.centerXAnchor.constraint(equalTo: commonFunctionBar.centerXAnchor),
-      modeButtonStack.centerYAnchor.constraint(equalTo: commonFunctionBar.centerYAnchor),
+      commonFunctionBar.trailingAnchor.constraint(equalTo: modeButtonStack.leadingAnchor, constant: -4),
+      modeButtonStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -6),
+      modeButtonStack.centerYAnchor.constraint(equalTo: centerYAnchor),
+      phraseBarView.topAnchor.constraint(equalTo: commonFunctionBar.topAnchor),
+      phraseBarView.bottomAnchor.constraint(equalTo: commonFunctionBar.bottomAnchor),
     ]
+
+    if keyboardContext.displayAppIconButton {
+      constraints.append(phraseBarView.leadingAnchor.constraint(equalTo: iconButton.trailingAnchor, constant: 4))
+    } else {
+      constraints.append(phraseBarView.leadingAnchor.constraint(equalTo: commonFunctionBar.leadingAnchor, constant: 4))
+    }
+    if keyboardContext.displayKeyboardDismissButton {
+      constraints.append(phraseBarView.trailingAnchor.constraint(equalTo: dismissKeyboardButton.leadingAnchor, constant: -4))
+    } else {
+      constraints.append(phraseBarView.trailingAnchor.constraint(equalTo: commonFunctionBar.trailingAnchor))
+    }
 
     if keyboardContext.displayAppIconButton {
       constraints.append(contentsOf: [
@@ -188,6 +216,7 @@ class KeyboardToolbarView: NibLessView {
       button.backgroundColor = style.toolbarButtonBackgroundColor
     }
     self.style = appearance.candidateBarStyle
+    phraseBarView.setColors(textColor: style.candidateTextColor, pressedColor: style.toolbarButtonPressedBackgroundColor)
     if keyboardContext.displayAppIconButton {
       iconButton.tintColor = style.toolbarButtonFrontColor
     }
@@ -212,6 +241,14 @@ class KeyboardToolbarView: NibLessView {
       }
       .store(in: &subscriptions)
 
+    // Gary fork：常用詞／聯想
+    rimeContext.boshiamyPhrases.$items
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] in
+        self?.phraseBarView.update($0)
+      }
+      .store(in: &subscriptions)
+
     rimeContext.userInputKeyPublished
       .receive(on: DispatchQueue.main)
       .sink { [weak self] in
@@ -223,7 +260,14 @@ class KeyboardToolbarView: NibLessView {
         if self.candidateBarView.superview == nil {
           candidateBarView.setStyle(self.style)
           addSubview(candidateBarView)
-          candidateBarView.fillSuperview()
+          // Gary fork：右邊留給「繁」「中」按鈕
+          candidateBarView.translatesAutoresizingMaskIntoConstraints = false
+          NSLayoutConstraint.activate([
+            candidateBarView.topAnchor.constraint(equalTo: topAnchor),
+            candidateBarView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            candidateBarView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            candidateBarView.trailingAnchor.constraint(equalTo: modeButtonStack.leadingAnchor, constant: -4),
+          ])
         }
 
         // 检测是否启用内嵌编码

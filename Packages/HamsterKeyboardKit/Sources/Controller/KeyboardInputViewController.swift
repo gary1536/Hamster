@@ -50,6 +50,7 @@ open class KeyboardInputViewController: UIInputViewController, KeyboardControlle
     setupRIME()
     viewWillSetupKeyboard()
     viewWillSyncWithContext()
+    setupBoshiamyPhrases()
 
     // fix: 屏幕边缘按键触摸延迟
     // https://stackoverflow.com/questions/39813245/touchesbeganwithevent-is-delayed-at-left-edge-of-screen
@@ -59,6 +60,12 @@ open class KeyboardInputViewController: UIInputViewController, KeyboardControlle
     view.window?.gestureRecognizers?.forEach {
       $0.delaysTouchesBegan = false
     }
+  }
+
+  override open func viewWillDisappear(_ animated: Bool) {
+    super.viewWillDisappear(animated)
+    // Gary fork：鍵盤消失時把常用詞記錄寫回檔案
+    rimeContext.boshiamyPhrases.keyboardWillDisappear()
   }
 
   override open func viewDidAppear(_ animated: Bool) {
@@ -444,6 +451,9 @@ open class KeyboardInputViewController: UIInputViewController, KeyboardControlle
       keyboardContext.setKeyboardType(.numericNineGrid)
     }
 
+    // Gary fork：換到密碼欄位時不記錄、不顯示常用詞
+    rimeContext.boshiamyPhrases.isSecureContext = isSecureInputContext
+
     if keyboardContext.textDocumentProxy === textDocumentProxy { return }
     keyboardContext.textDocumentProxy = textDocumentProxy
   }
@@ -771,6 +781,9 @@ open class KeyboardInputViewController: UIInputViewController, KeyboardControlle
 
   // MARK: - 語音鍵 patch（HamsterVoice）
 
+  /// Gary fork：打繁出簡模式同步給常用詞／聯想
+  private var boshiamyPhraseSubscription: AnyCancellable?
+
   /// 語音辨識模組（AVAudioEngine + SFSpeechRecognizer zh-TW）
   public lazy var voiceModule: VoiceModule = {
     let module = VoiceModule()
@@ -802,6 +815,47 @@ open class KeyboardInputViewController: UIInputViewController, KeyboardControlle
       return
     }
     openHostAppURL(BoshiamyVoiceHandoff.voiceURL)
+  }
+
+  // MARK: - Gary fork：常用詞與聯想
+
+  /// 鍵盤出現時：套用設定、判斷是否密碼欄位、載入記錄、顯示常用詞
+  func setupBoshiamyPhrases() {
+    let phrases = rimeContext.boshiamyPhrases
+    phrases.insertHandler = { [weak self] text in
+      self?.insertTextPatch(text)
+    }
+    phrases.enabled = keyboardContext.enableBoshiamyPhraseSuggestion
+    phrases.isSecureContext = isSecureInputContext
+    phrases.simplified = rimeContext.boshiamySimplified
+    phrases.keyboardWillAppear()
+
+    if boshiamyPhraseSubscription == nil {
+      boshiamyPhraseSubscription = rimeContext.$boshiamySimplified
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] in self?.rimeContext.boshiamyPhrases.simplified = $0 }
+    }
+  }
+
+  /// 密碼欄位或 secure text：不記錄
+  var isSecureInputContext: Bool {
+    let proxy = textDocumentProxy
+    if proxy.isSecureTextEntry == true { return true }
+    if let type = proxy.textContentType ?? nil {
+      return [UITextContentType.password, .newPassword, .oneTimeCode].contains(type)
+    }
+    return false
+  }
+
+  /// 按下任何鍵：聯想消失。正在組字或要送進 RIME 的字母鍵，不切斷連續上屏的文字。
+  func boshiamyKeyPressed(_ action: KeyboardAction) {
+    var continuesText = !rimeContext.userInputKey.isEmpty
+    if !continuesText, case .character = action,
+       keyboardContext.keyboardType.isChinesePrimaryKeyboard, !rimeContext.asciiMode
+    {
+      continuesText = true
+    }
+    rimeContext.boshiamyPhrases.keyPressed(continuesText: continuesText)
   }
 
   /// Gary fork：送出主 App 語音頁交回來的文字（取出後即清除）
@@ -974,6 +1028,8 @@ private extension KeyboardInputViewController {
           // 写入 userInputKey
           DispatchQueue.main.asyncAfter(deadline: .now() + 0.001) {
             self.insertTextPatch(commitText)
+            // Gary fork：記錄上屏、顯示聯想
+            self.rimeContext.boshiamyPhrases.didCommit(commitText)
           }
         }
 

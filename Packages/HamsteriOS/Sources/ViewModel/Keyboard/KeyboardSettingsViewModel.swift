@@ -216,6 +216,17 @@ public class KeyboardSettingsViewModel: ObservableObject, Hashable, Identifiable
     }
   }
 
+  /// 嘸蝦米：候選列的常用詞與聯想
+  public var enableBoshiamyPhraseSuggestion: Bool {
+    get {
+      HamsterAppDependencyContainer.shared.configuration.keyboard?.enableBoshiamyPhraseSuggestion ?? true
+    }
+    set {
+      HamsterAppDependencyContainer.shared.configuration.keyboard?.enableBoshiamyPhraseSuggestion = newValue
+      HamsterAppDependencyContainer.shared.applicationConfiguration.keyboard?.enableBoshiamyPhraseSuggestion = newValue
+    }
+  }
+
   public var enableButtonUnderBorder: Bool {
     get {
       HamsterAppDependencyContainer.shared.configuration.keyboard?.enableButtonUnderBorder ?? true
@@ -837,6 +848,25 @@ public class KeyboardSettingsViewModel: ObservableObject, Hashable, Identifiable
 
   /// 中文键盘设置
   lazy var chineseStanderSystemKeyboardSettingsItems: [SettingSectionModel] = [
+    .init(
+      footer: "沒在打字時，候選列中間顯示你最常用的字詞；剛上屏後改顯示常接在後面的詞，點一下直接上屏。記錄只存在這支手機（App Group），不會上傳；密碼欄位不記錄。",
+      items: [
+        .init(
+          text: "常用詞與聯想",
+          type: .toggle,
+          toggleValue: { [unowned self] in enableBoshiamyPhraseSuggestion },
+          toggleHandled: { [unowned self] in
+            enableBoshiamyPhraseSuggestion = $0
+          }),
+        .init(
+          text: "清除記錄",
+          textTintColor: .systemRed,
+          type: .button,
+          buttonAction: {
+            BoshiamyPhraseStore.clearAll()
+            await ProgressHUD.success("已清除常用詞與聯想記錄", interaction: false, delay: 1.5)
+          }),
+      ]),
     .init(
       footer: "“按键位于空格左侧”选项：关闭状态则位于空格右侧，开启状态则位于空格左侧",
       items: [

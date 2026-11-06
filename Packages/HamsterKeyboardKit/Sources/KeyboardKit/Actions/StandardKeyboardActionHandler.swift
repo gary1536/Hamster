@@ -115,6 +115,10 @@ open class StandardKeyboardActionHandler: NSObject, KeyboardActionHandler {
    该函数用于处理可取代其他操作而触发 action 的情况。
    */
   open func handle(_ gesture: KeyboardGesture, on action: KeyboardAction, replaced: Bool) {
+    // Gary fork：按任何鍵，聯想就消失
+    if gesture == .press {
+      (keyboardController as? KeyboardInputViewController)?.boshiamyKeyPressed(action)
+    }
     // 不能被取代 && 尝试处理取代Action
     // 注意：是 if 不是 guard
     if !replaced && tryHandleReplacementAction(before: gesture, on: action) { return }
@@ -138,6 +142,10 @@ open class StandardKeyboardActionHandler: NSObject, KeyboardActionHandler {
    */
   open func handle(_ gesture: KeyboardGesture, on key: Key) {
     let action = key.action
+    // Gary fork：按任何鍵，聯想就消失
+    if gesture == .press {
+      (keyboardController as? KeyboardInputViewController)?.boshiamyKeyPressed(action)
+    }
 
     // 不能被取代 && 尝试处理取代Action
     // 注意：是 if 不是 guard

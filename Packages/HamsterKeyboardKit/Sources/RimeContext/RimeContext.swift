@@ -101,6 +101,9 @@ public class RimeContext {
 
   // MARK: Gary fork：嘸蝦米模式（繁／簡、中／英、中英連打）
 
+  /// 候選列的常用詞與聯想（Gary fork）
+  public let boshiamyPhrases = BoshiamyPhraseSuggestion()
+
   /// 打繁出簡模式（RIME 選項 simplification），給工具列「繁／簡」按鈕顯示
   @MainActor @Published
   public var boshiamySimplified: Bool = false
