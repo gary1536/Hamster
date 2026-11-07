@@ -166,6 +166,10 @@ open class iPadChineseKeyboardLayoutProvider: SystemKeyboardLayoutProvider {
     result.append(.nextKeyboard)
     if let action = keyboardSwitchActionForBottomRow(for: context) { result.append(action) }
     result.append(.keyboardType(.classifySymbolic))
+    // Gary fork：「數」切到嘸蝦米數字鍵盤（PLAN.md 第 10 節）
+    if context.keyboardType.isChinesePrimaryKeyboard {
+      result.append(.keyboardType(BoshiamyNumberKeyboard.keyboardType))
+    }
     result.append(.space)
     if let action = keyboardSwitchActionForBottomRow(for: context) { result.append(action) }
     // 語音鍵 patch：在收起鍵盤前加入麥克風鍵
