@@ -449,7 +449,10 @@ public class KeyboardContext: ObservableObject {
 
   /// 自定义键盘
   var keyboards: [Keyboard] {
-    hamsterConfiguration?.keyboards ?? []
+    // Gary fork：加上內建的嘸蝦米數字鍵盤
+    let configured = hamsterConfiguration?.keyboards ?? []
+    if configured.contains(where: { $0.name == BoshiamyNumberKeyboard.name }) { return configured }
+    return configured + [BoshiamyNumberKeyboard.keyboard]
   }
 
   /// 是否启用内嵌输入模式

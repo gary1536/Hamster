@@ -99,7 +99,11 @@ open class CustomizeKeyboardLayoutProvider: KeyboardLayoutProvider {
     }
 
     /// 如果都没有配置，则取系统默认高度
-    let height = itemSizeHeight(for: action, row: row, index: index, context: context)
+    var height = itemSizeHeight(for: action, row: row, index: index, context: context)
+    // Gary fork：嘸蝦米數字鍵盤 5 列，總高度與 4 列的主鍵盤相同
+    if keyboard.name == BoshiamyNumberKeyboard.name {
+      height = (height * 4 / 5).rounded()
+    }
     return KeyboardLayoutItemSize(width: width, height: height)
   }
 

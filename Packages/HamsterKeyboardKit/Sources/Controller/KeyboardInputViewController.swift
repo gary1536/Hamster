@@ -51,6 +51,8 @@ open class KeyboardInputViewController: UIInputViewController, KeyboardControlle
     viewWillSetupKeyboard()
     viewWillSyncWithContext()
     setupBoshiamyPhrases()
+    // Gary fork：叫出鍵盤時的欄位就是數字欄位
+    boshiamyAutoSwitchNumberKeyboardIfNeeded()
 
     // fix: 屏幕边缘按键触摸延迟
     // https://stackoverflow.com/questions/39813245/touchesbeganwithevent-is-delayed-at-left-edge-of-screen
@@ -446,10 +448,9 @@ open class KeyboardInputViewController: UIInputViewController, KeyboardControlle
   override open func textWillChange(_ textInput: UITextInput?) {
     super.textWillChange(textInput)
 
-    // fix: 键盘跟随环境显示数字键盘
-    if let keyboardType = textDocumentProxy.keyboardType, keyboardType.isNumberType {
-      keyboardContext.setKeyboardType(.numericNineGrid)
-    }
+    // Gary fork：只能輸入數字的欄位自動顯示嘸蝦米數字鍵盤（原本是數字九宮格），
+    // 只在換欄位時判斷，使用者在數字欄位按「返回」後不會又被切回來
+    boshiamyAutoSwitchNumberKeyboardIfNeeded()
 
     // Gary fork：換到密碼欄位時不記錄、不顯示常用詞
     rimeContext.boshiamyPhrases.isSecureContext = isSecureInputContext
@@ -784,6 +785,11 @@ open class KeyboardInputViewController: UIInputViewController, KeyboardControlle
   /// Gary fork：打繁出簡模式同步給常用詞／聯想
   private var boshiamyPhraseSubscription: AnyCancellable?
 
+  /// Gary fork：上次判斷過的欄位
+  var boshiamyLastDocumentIdentifier: UUID?
+  /// Gary fork：目前的數字鍵盤是自動切過去的
+  var boshiamyAutoNumberKeyboard = false
+
   /// 語音辨識模組（AVAudioEngine + SFSpeechRecognizer zh-TW）
   public lazy var voiceModule: VoiceModule = {
     let module = VoiceModule()
@@ -944,6 +950,24 @@ private extension KeyboardInputViewController {
    */
   func setupNextKeyboardBehavior() {
     NextKeyboardController.shared = self
+  }
+
+  func boshiamyAutoSwitchNumberKeyboardIfNeeded() {
+    let identifier = textDocumentProxy.documentIdentifier
+    guard identifier != boshiamyLastDocumentIdentifier else { return }
+    boshiamyLastDocumentIdentifier = identifier
+
+    if let type = textDocumentProxy.keyboardType, type.isNumberType {
+      if !BoshiamyNumberKeyboard.isNumberKeyboard(keyboardContext.keyboardType) {
+        keyboardContext.setKeyboardType(BoshiamyNumberKeyboard.keyboardType)
+      }
+      boshiamyAutoNumberKeyboard = true
+    } else if boshiamyAutoNumberKeyboard {
+      boshiamyAutoNumberKeyboard = false
+      if BoshiamyNumberKeyboard.isNumberKeyboard(keyboardContext.keyboardType) {
+        keyboardContext.setKeyboardType(keyboardContext.returnKeyboardType())
+      }
+    }
   }
 
   var needNumberKeyboard: Bool {

@@ -48,6 +48,8 @@ public extension KeyboardType {
     case .chineseNumeric: return "123"
     case .symbolic: return "#+="
     case .chineseSymbolic: return "#+="
+    // Gary fork：嘸蝦米下排的「數」
+    case .custom(let name, _) where name == BoshiamyNumberKeyboard.name: return "數"
     case .custom: return "中"
     default: return nil
 //    case .alphabetic: return KKL10n.keyboardTypeAlphabetic.text(for: context)

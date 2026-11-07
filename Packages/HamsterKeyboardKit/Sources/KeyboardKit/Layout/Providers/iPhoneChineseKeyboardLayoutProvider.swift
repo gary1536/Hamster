@@ -55,6 +55,10 @@ open class iPhoneChineseKeyboardLayoutProvider: SystemKeyboardLayoutProvider {
     case .character, .symbol: return isLastNumericInputRow(row, for: context) ? lastSymbolicInputWidth(for: context) : .input
     case .backspace: return lowerSystemButtonWidth(for: context)
     case .keyboardType(let type):
+      // Gary fork：「數」鍵窄一點，空白鍵留寬
+      if BoshiamyNumberKeyboard.isNumberKeyboard(type) {
+        return .percentage(isPortrait(context) ? 0.1 : 0.08)
+      }
       /// 中文主键盘的最后一行第一个键
       if row == 3 && actions[row].count == 3 {
         return largeBottomWidth(for: context)
@@ -185,6 +189,11 @@ open class iPhoneChineseKeyboardLayoutProvider: SystemKeyboardLayoutProvider {
 
     if context.displayClassifySymbolButton {
       result.append(.keyboardType(.classifySymbolic))
+    }
+
+    // Gary fork：「數」切到嘸蝦米數字鍵盤（PLAN.md 第 10 節）
+    if context.keyboardType.isChinesePrimaryKeyboard {
+      result.append(.keyboardType(BoshiamyNumberKeyboard.keyboardType))
     }
 
     if context.keyboardType.isChinesePrimaryKeyboard, context.chineseEnglishSwitchButtonIsOnLeftOfSpaceButton, let action = needsChineseEnglishSwitchAction(for: context) {
