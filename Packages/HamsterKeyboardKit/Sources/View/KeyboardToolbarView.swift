@@ -95,15 +95,15 @@ class KeyboardToolbarView: NibLessView {
     return view
   }()
 
-  /// Gary fork：候選列中間的「常用詞／聯想」（沒在打字時顯示）
+  /// Gary fork：候選列中間的常用詞（剛上屏後才出現）
   lazy var phraseBarView: BoshiamyPhraseBarView = {
     let view = BoshiamyPhraseBarView(
       textColor: style.candidateTextColor,
       pressedColor: style.toolbarButtonPressedBackgroundColor,
       font: style.candidateTextFont
     )
-    view.onSelect = { [weak self] text in
-      self?.rimeContext.boshiamyPhrases.select(text)
+    view.onSelect = { [weak self] index in
+      self?.rimeContext.boshiamyPhrases.select(at: index)
     }
     return view
   }()

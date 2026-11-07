@@ -2,11 +2,12 @@
 //  BoshiamyPhraseSuggestion.swift
 //  HamsterKeyboardKit
 //
-//  Gary fork：候選列（沒在打字時）的「常用詞」與「聯想」。
+//  Gary fork：候選列（沒在打字時）的「常用詞」。
 //
-//  - 平常顯示常用詞（BoshiamyPhraseStore.commonPhrases）。
-//  - 剛上屏後顯示聯想：先用使用者自己的接續統計，不足時用 boshiamy_assoc.txt（rime-essay 詞頻產生）補。
-//  - 按其他任何鍵就回到常用詞。
+//  - 平常候選列中間保持空白，不主動顯示常用詞（2026-11-07 使用者要求，Android 1.1.0-5 同步）。
+//  - 剛上屏一個字或詞後，顯示以它開頭／常接在它後面的「使用者自己的」常用詞（只用本機統計，不用詞庫補）。
+//    顯示整個詞（上屏「永」→ 顯示「永盈」），點選時只送出後面還沒上屏的部分（「盈」）。
+//  - 按其他任何鍵、或開始打新字根，就消失。
 //  - 打繁出簡模式：顯示與上屏的詞用 OpenCC t2s 轉成簡體。
 //  - 密碼欄位、secure text、或設定關閉時：不記錄也不顯示。
 //
@@ -25,6 +26,12 @@ public final class BoshiamyPhraseSuggestion: ObservableObject {
   /// 候選列中間要顯示的詞
   @Published public private(set) var items: [String] = []
   @Published public private(set) var mode: Mode = .common
+
+  /// 與 items 對應：點選時實際要上屏的文字（去掉已經上屏的開頭）
+  private var commitTexts: [String] = []
+
+  /// 最近一次上屏的詞（顯示時當作開頭），只取結尾的漢字，最多 4 個
+  private var anchor = ""
 
   /// 設定「常用詞與聯想」
   public var enabled = true {
@@ -67,15 +74,23 @@ public final class BoshiamyPhraseSuggestion: ObservableObject {
 
   /// RIME 或候選列送出了文字
   public func didCommit(_ text: String) {
-    guard canRecord else { return }
-    store.record(text)
-    showAssociations()
+    commit(text, anchorWord: text)
   }
 
-  /// 使用者點了候選列的詞
-  public func select(_ text: String) {
+  /// 使用者點了候選列第 index 個詞：只送出還沒上屏的部分，下次聯想以整個詞當開頭
+  public func select(at index: Int) {
+    guard index >= 0, index < commitTexts.count, index < items.count else { return }
+    let text = commitTexts[index]
+    let word = items[index]
     insertHandler?(text)
-    didCommit(text)
+    commit(text, anchorWord: word)
+  }
+
+  private func commit(_ text: String, anchorWord: String) {
+    guard canRecord else { return }
+    store.record(text)
+    anchor = Self.trailingHan(anchorWord)
+    showAssociations()
   }
 
   /// 按了鍵盤上的任何鍵：聯想消失。
@@ -107,13 +122,11 @@ public final class BoshiamyPhraseSuggestion: ObservableObject {
 
   // MARK: - 產生清單
 
+  /// 沒剛上屏：候選列中間保持空白
   private func showCommon() {
     mode = .common
-    guard canRecord else {
-      items = []
-      return
-    }
-    items = convertForDisplay(store.commonPhrases(limit: Self.maxItems))
+    commitTexts = []
+    if !items.isEmpty { items = [] }
   }
 
   private func showAssociations() {
@@ -122,48 +135,26 @@ public final class BoshiamyPhraseSuggestion: ObservableObject {
       showCommon()
       return
     }
-    var result = convertForDisplay(store.userAssociations(after: context, limit: Self.maxItems))
-    if result.count < Self.maxItems {
-      for word in dictionaryAssociations(after: context) where !result.contains(word) {
-        result.append(word)
-        if result.count >= Self.maxItems { break }
-      }
-    }
-    if result.isEmpty {
+    let continuations = convertForDisplay(store.userAssociations(after: context, limit: Self.maxItems))
+    if continuations.isEmpty {
       showCommon()
       return
     }
+    // 顯示的開頭：剛上屏的詞（要以上文結尾，否則只用上文）
+    let prefix = (!anchor.isEmpty && anchor.hasSuffix(context)) ? anchor : context
     mode = .association
-    items = result
+    commitTexts = continuations
+    items = continuations.map { prefix + $0 }
   }
 
-  // MARK: - 詞庫補詞（boshiamy_assoc.txt）
-
-  private lazy var dictionary: [Character: [String]] = {
-    guard let url = Bundle.module.url(forResource: "boshiamy_assoc", withExtension: "txt"),
-          let text = try? String(contentsOf: url, encoding: .utf8)
-    else {
-      FileManager.hamsterDiag("[phrase] boshiamy_assoc.txt not found")
-      return [:]
+  /// 文字結尾連續的漢字，最多 4 個
+  private static func trailingHan(_ text: String) -> String {
+    var chars: [Character] = []
+    for ch in text.reversed() {
+      guard chars.count < 4, BoshiamyPhraseStore.isHan(ch) else { break }
+      chars.insert(ch, at: 0)
     }
-    var map: [Character: [String]] = [:]
-    for line in text.split(separator: "\n") {
-      let parts = line.split(separator: "\t").map(String.init)
-      guard let lead = parts.first?.first, parts.count > 1 else { continue }
-      map[lead] = Array(parts.dropFirst())
-    }
-    return map
-  }()
-
-  private func dictionaryAssociations(after context: String) -> [String] {
-    guard let last = context.last else { return [] }
-    if simplified {
-      // 詞庫是繁體：上文先轉繁體查，結果再轉簡體
-      let traditionalLast = convert(String(last), handle: s2tHandle).first ?? last
-      let words = dictionary[traditionalLast] ?? dictionary[last] ?? []
-      return words.map { convert($0, handle: t2sHandle) }
-    }
-    return dictionary[last] ?? []
+    return String(chars)
   }
 
   // MARK: - OpenCC

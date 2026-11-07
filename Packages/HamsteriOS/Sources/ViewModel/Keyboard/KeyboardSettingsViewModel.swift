@@ -849,7 +849,7 @@ public class KeyboardSettingsViewModel: ObservableObject, Hashable, Identifiable
   /// 中文键盘设置
   lazy var chineseStanderSystemKeyboardSettingsItems: [SettingSectionModel] = [
     .init(
-      footer: "沒在打字時，候選列中間顯示你最常用的字詞；剛上屏後改顯示常接在後面的詞，點一下直接上屏。記錄只存在這支手機（App Group），不會上傳；密碼欄位不記錄。",
+      footer: "剛上屏一個字或詞後，候選列中間顯示以它開頭或常接在後面的常用詞，點一下上屏；沒剛上屏時保持空白。記錄只存在這支手機（App Group），不會上傳；密碼欄位不記錄。",
       items: [
         .init(
           text: "常用詞與聯想",

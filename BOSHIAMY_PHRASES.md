@@ -1,17 +1,21 @@
 # 嘸蝦米：候選列的常用詞與聯想
 
-iOS 版（本 repo，`voice-key-m0` 分支）已實作。Android 版（Trime）要做一樣的功能，做法見最後一節。
+iOS 版（本 repo，`voice-key-m0` 分支）與 Android 版（Trime `boshiamy` 分支）都已實作。
+
+> **2026-11-07 改版**（使用者在小米 15 Ultra 實機確認後要求，Android 1.1.0-5 與 iOS 同步）：
+> 沒在打字時候選列中間保持空白，**不再主動顯示常用詞**；只在剛上屏後顯示使用者自己的接續，**不再用詞庫補詞**。
+> 下面「常用詞」排序規則（`commonPhrases`）目前沒有地方用到，先保留。
 
 ## 功能
 
 | 狀態 | 候選列中間顯示 | 點一下 |
 |---|---|---|
-| 沒在打字 | **常用詞**：最常用的 8–10 個字詞，2–4 字詞優先，也有單字 | 直接上屏，接著顯示聯想 |
-| 剛上屏 | **聯想**：最常接在剛才那個字／詞後面的詞；不足時用詞庫補 | 直接上屏，再接著聯想 |
+| 沒在打字、也沒剛上屏 | **空白**（只有左邊的按鈕和右邊的繁／中） | — |
+| 剛上屏 | 以剛上屏的字詞開頭、或常接在它後面的**使用者常用詞**，顯示整個詞（上屏「永」→「永盈」） | 只送出還沒上屏的部分（「盈」），再以整個詞「永盈」當開頭接著聯想 |
 | 正在打嘸蝦米碼 | RIME 候選（**順序固定**，方案 `enable_user_dict: false`，不自動調頻） | 照舊 |
 
 - 「繁」「中」兩個切換按鈕**固定在候選列最右邊**（打字時也在），左側和中間給候選字與常用詞。
-- 聯想出現後，按鍵盤上的**任何鍵**就消失，回到常用詞。
+- 聯想出現後，按鍵盤上的**任何鍵**（包括開始打新字根）就消失，候選列中間回到空白。
 
 ## 隱私
 
@@ -44,9 +48,9 @@ iOS 版（本 repo，`voice-key-m0` 分支）已實作。Android 版（Trime）�
   - 前 2 字上文的接續 × 2，加上前 1 字上文的接續。2 字以上 × 1.3。
   - 跨詞的接續不要：接續的第一個字跟上文黏得比跟下一個字更緊（「我」→「們今」：「我們」遠比「們今」常見）。
   - 次數相近的同一串（「今」「今天」「今天去」）留最短的多字版本。
-  - 不足 10 個時用 `boshiamy_assoc.txt` 補。
+  - ~~不足 10 個時用 `boshiamy_assoc.txt` 補~~（2026-11-07 起不補；Android 仍用詞庫判斷接續有沒有跨詞）。
 
-### 詞庫補詞（`boshiamy_assoc.txt`）
+### 詞庫（`boshiamy_assoc.txt`，2026-11-07 起 iOS 不再使用，資料檔先保留）
 
 - 由 `BoshiamyAssocBuild.py` 從 rime-essay 的 `essay.txt`（`.tmp/SharedSupport/essay.txt`，InputSchemaBuild.sh 產生）產生，
   用 `.deps/bin/opencc` 的 t2tw 轉成台灣用字（為、啟）。
@@ -56,22 +60,21 @@ iOS 版（本 repo，`voice-key-m0` 分支）已實作。Android 版（Trime）�
 ### 打繁出簡
 
 使用者記錄存的是實際上屏的字。打繁出簡模式下，顯示的詞用 OpenCC `t2s` 轉成簡體。
-詞庫補詞時，先用 `s2t` 把上文轉成繁體再查表，結果再轉簡體。
 
 ## 程式位置（iOS）
 
 | 檔案 | 內容 |
 |---|---|
 | `Packages/HamsterKeyboardKit/Sources/Boshiamy/BoshiamyPhraseStore.swift` | 記錄、排序、存檔、清除 |
-| `Packages/HamsterKeyboardKit/Sources/Boshiamy/BoshiamyPhraseSuggestion.swift` | 顯示常用詞或聯想、詞庫補詞、OpenCC |
+| `Packages/HamsterKeyboardKit/Sources/Boshiamy/BoshiamyPhraseSuggestion.swift` | 上屏後顯示「開頭＋接續」、點選只送接續、OpenCC |
 | `Packages/HamsterKeyboardKit/Sources/View/BoshiamyPhraseBarView.swift` | 候選列中間的橫向捲動列 |
 | `Packages/HamsterKeyboardKit/Sources/View/KeyboardToolbarView.swift` | 版面：繁／中固定在最右邊 |
 | `Packages/HamsterKeyboardKit/Sources/Controller/KeyboardInputViewController.swift` | 上屏後 `didCommit`、密碼欄位判斷、鍵盤出現／消失 |
 | `Packages/HamsterKeyboardKit/Sources/KeyboardKit/Actions/StandardKeyboardActionHandler.swift` | 任何按鍵 → `boshiamyKeyPressed`（聯想消失） |
 | `Packages/HamsteriOS/Sources/ViewModel/Keyboard/KeyboardSettingsViewModel.swift` | 設定開關與清除按鈕 |
-| `Packages/HamsterKeyboardKit/Sources/Resources/boshiamy_assoc.txt` | 詞庫補詞資料 |
+| `Packages/HamsterKeyboardKit/Sources/Resources/boshiamy_assoc.txt` | 詞庫資料（目前 iOS 沒用到） |
 
-## Android 版（Trime）做法
+## Android 版（Trime）做法（已完成；這節是當初的移植筆記）
 
 演算法、檔案格式、排序規則都照上面，直接把 Swift 移植成 Kotlin。差別只在掛載點：
 

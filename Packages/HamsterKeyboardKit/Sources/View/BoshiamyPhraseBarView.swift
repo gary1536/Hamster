@@ -8,7 +8,8 @@
 import UIKit
 
 final class BoshiamyPhraseBarView: UIView {
-  var onSelect: ((String) -> Void)?
+  /// 參數是第幾個詞（實際上屏的文字由 BoshiamyPhraseSuggestion.select(at:) 決定）
+  var onSelect: ((Int) -> Void)?
 
   private var textColor: UIColor
   private var pressedColor: UIColor
@@ -69,8 +70,9 @@ final class BoshiamyPhraseBarView: UIView {
 
   func update(_ items: [String]) {
     stackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-    for item in items {
+    for (index, item) in items.enumerated() {
       let button = UIButton(type: .custom)
+      button.tag = index
       button.setTitle(item, for: .normal)
       button.titleLabel?.font = font
       button.setTitleColor(textColor, for: .normal)
@@ -94,7 +96,6 @@ final class BoshiamyPhraseBarView: UIView {
 
   @objc private func touchUp(_ sender: UIButton) {
     sender.backgroundColor = .clear
-    guard let text = sender.title(for: .normal), !text.isEmpty else { return }
-    onSelect?(text)
+    onSelect?(sender.tag)
   }
 }
